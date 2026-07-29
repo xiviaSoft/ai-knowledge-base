@@ -34,6 +34,72 @@ class AuthRepository {
 
         });
     }
+    async findUserByEmail(email) {
+        return prisma.users.findUnique({
+            where: {
+                email
+            }
+        });
+    }
+
+    async updateRefreshToken(userId, token, expiresAt) {
+        return prisma.refresh_tokens.updateMany({
+            where: {
+                user_id: userId
+            },
+            data: {
+                token,
+                expires_at: expiresAt
+            }
+        });
+    }
+
+    async findUserById(id) {
+
+        return prisma.users.findUnique({
+            where: {
+                id
+            },
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+                avatar: true,
+                is_verified: true,
+                created_at: true
+            }
+        });
+
+    }
+
+    async findRefreshToken(token) {
+        return prisma.refresh_tokens.findFirst({
+            where: {
+                token
+            },
+            include: {
+                users: true
+            }
+        });
+    }
+
+    async deleteRefreshToken(token) {
+        return prisma.refresh_tokens.deleteMany({
+            where: {
+                token
+            }
+        });
+    }
+
+    async deleteRefreshToken(token) {
+        return prisma.refresh_tokens.deleteMany({
+            where: {
+                token
+            }
+        });
+    }
+
 }
 
 export default new AuthRepository();

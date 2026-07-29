@@ -1,6 +1,6 @@
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import authRepository from "../repositories/auth.repository.js";
-import { hashPassword } from "../utils/password.js";
+import { comparePassword, hashPassword } from "../utils/password.js";
 import { generateSlug } from "../utils/slug.js";
 import { v4 as uuid } from "uuid";
 
@@ -104,7 +104,110 @@ class AuthService {
         };
 
     }
+    // Login service method
+    async login(data) {
 
+        const { email, password } = data;
+
+        const user = await authRepository.findUserByEmail(email);
+        console.log("========== LOGIN DEBUG ==========");
+        console.log("Email from request:", email);
+        console.log("User found:", user);
+
+        if (!user) {
+            throw new Error("Invalid email or password.");
+        }
+
+        const isPasswordValid = await comparePassword(
+            password,
+            user.password
+        );
+        console.log("Entered Password:", password);
+        console.log("Stored Password:", user.password);
+        console.log("Password Match:", isPasswordValid);
+        if (!isPasswordValid) {
+            throw new Error("Invalid email or password.");
+        }
+
+        const payload = {
+            id: user.id,
+            email: user.email
+        };
+
+        const accessToken = generateAccessToken(payload);
+
+        const refreshToken = generateRefreshToken(payload);
+
+        const expiresAt = new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+        );
+
+        await authRepository.updateRefreshToken(
+            user.id,
+            refreshToken,
+            expiresAt
+        );
+
+        return {
+            message: "Login successful.",
+            accessToken,
+            refreshToken,
+            user
+        };
+    }
+
+    async getCurrentUser(userId) {
+
+        const user = await authRepository.findUserById(userId);
+
+        if (!user) {
+            throw new Error("User not found.");
+        }
+
+        return user;
+    }
+    async refreshToken(refreshToken) {
+
+        const storedToken =
+            await authRepository.findRefreshToken(refreshToken);
+
+        if (!storedToken) {
+            throw new Error("Invalid refresh token.");
+        }
+
+        if (storedToken.expires_at < new Date()) {
+            throw new Error("Refresh token expired.");
+        }
+
+        const payload = {
+            id: storedToken.users.id,
+            email: storedToken.users.email
+        };
+
+        const accessToken =
+            generateAccessToken(payload);
+
+        return {
+            accessToken
+        };
+    }
+
+    async logout(refreshToken) {
+
+        const token =
+            await authRepository.findRefreshToken(refreshToken);
+
+        if (!token) {
+            throw new Error("Refresh token not found.");
+        }
+
+        await authRepository.deleteRefreshToken(refreshToken);
+
+        return {
+            message: "Logged out successfully."
+        };
+
+    }
 }
 
 export default new AuthService();
