@@ -5,10 +5,12 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import routes from "./routes/index.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
 app.use(cors());
+app.use(errorHandler);
 
 app.use(helmet());
 
