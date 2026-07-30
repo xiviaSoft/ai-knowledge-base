@@ -42,14 +42,16 @@ model refresh_tokens {
 
 model users {
   id                        String                      @id @db.Char(36)
-  firstName                String                      @db.VarChar(100)
-  lastName                 String?                     @db.VarChar(100)
+  first_name                String                      @db.VarChar(100)
+  last_name                 String?                     @db.VarChar(100)
   email                     String                      @unique(map: "email") @db.VarChar(255)
   password                  String                      @db.VarChar(255)
   avatar                    String?                     @db.VarChar(500)
   is_verified               Boolean?                    @default(false)
-  createdAt                DateTime?                   @default(now()) @db.Timestamp(0)
-  updatedAt                DateTime?                   @default(now()) @db.Timestamp(0)
+  created_at                DateTime?                   @default(now()) @db.Timestamp(0)
+  updated_at                DateTime?                   @default(now()) @db.Timestamp(0)
+  conversations             conversations[]
+  documents                 documents[]
   email_verification_tokens email_verification_tokens[]
   password_reset_tokens     password_reset_tokens[]
   refresh_tokens            refresh_tokens[]
@@ -81,11 +83,68 @@ model workspaces {
   plan              workspaces_plan?    @default(FREE)
   created_at        DateTime?           @default(now()) @db.Timestamp(0)
   updated_at        DateTime?           @default(now()) @db.Timestamp(0)
+  conversations     conversations[]
+  documents         documents[]
   workspace_members workspace_members[]
   users             users               @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_workspace_owner")
 
   @@index([owner_id], map: "fk_workspace_owner")
   @@index([slug], map: "idx_workspace_slug")
+}
+
+model documents {
+  id              String              @id @db.Char(36)
+  workspace_id    String              @db.Char(36)
+  uploaded_by     String              @db.Char(36)
+  original_name   String              @db.VarChar(255)
+  stored_name     String              @db.VarChar(255)
+  file_type       documents_file_type
+  file_size       BigInt
+  storage_path    String              @db.VarChar(500)
+  status          documents_status?   @default(UPLOADING)
+  created_at      DateTime?           @default(now()) @db.Timestamp(0)
+  document_chunks document_chunks[]
+  users           users               @relation(fields: [uploaded_by], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_document_user")
+  workspaces      workspaces          @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_document_workspace")
+
+  @@index([uploaded_by], map: "fk_document_user")
+  @@index([workspace_id], map: "fk_document_workspace")
+}
+
+model document_chunks {
+  id          String    @id @db.Char(36)
+  document_id String    @db.Char(36)
+  chunk_index Int
+  content     String    @db.LongText
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  documents   documents @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_chunk_document")
+
+  @@index([document_id], map: "fk_chunk_document")
+}
+
+model conversations {
+  id           String     @id @db.Char(36)
+  workspace_id String     @db.Char(36)
+  user_id      String     @db.Char(36)
+  title        String?    @db.VarChar(255)
+  created_at   DateTime?  @default(now()) @db.Timestamp(0)
+  users        users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_conversation_user")
+  workspaces   workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_conversation_workspace")
+  messages     messages[]
+
+  @@index([user_id], map: "fk_conversation_user")
+  @@index([workspace_id], map: "fk_conversation_workspace")
+}
+
+model messages {
+  id              String        @id @db.Char(36)
+  conversation_id String        @db.Char(36)
+  role            messages_role
+  content         String        @db.LongText
+  created_at      DateTime?     @default(now()) @db.Timestamp(0)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_message_conversation")
+
+  @@index([conversation_id], map: "fk_message_conversation")
 }
 
 enum workspace_members_role {
@@ -100,4 +159,23 @@ enum workspaces_plan {
   PRO
   BUSINESS
   ENTERPRISE
+}
+
+enum documents_file_type {
+  PDF
+  DOCX
+  TXT
+}
+
+enum documents_status {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum messages_role {
+  USER
+  ASSISTANT
+  SYSTEM
 }

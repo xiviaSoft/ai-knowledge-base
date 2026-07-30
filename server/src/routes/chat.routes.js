@@ -1,8 +1,17 @@
-import { Router } from "express";
-import { chatController } from "../controllers/chat.controller.js";
+import express from "express";
+import chatController from "../controllers/chat.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
-const router = Router();
+const router = express.Router();
 
-router.post("/", chatController);
+router.post(
+
+    "/ask",
+
+    authenticate,
+
+    chatController.ask
+
+);
 
 export default router;

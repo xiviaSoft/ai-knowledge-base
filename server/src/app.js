@@ -1,11 +1,14 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import compression from "compression";
-import cookieParser from "cookie-parser";
-import morgan from "morgan";
-import routes from "./routes/index.js";
 import { errorHandler } from "./middleware/error.middleware.js";
+import workspaceRoutes from "./routes/workspace.routes.js";
+import documentRoutes from './routes/document.routes.js'
+import chatRoutes from './routes/chat.routes.js'
+import cookieParser from "cookie-parser";
+import routes from "./routes/index.js";
+import compression from "compression";
+import express from "express";
+import morgan from "morgan";
+import helmet from "helmet";
+import cors from "cors";
 
 const app = express();
 
@@ -23,6 +26,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(morgan("dev"));
+app.use("/api/workspaces", workspaceRoutes);
 app.use("/api", routes);
+app.use("/api/documents", documentRoutes);
 
+app.use("/api/chat", chatRoutes);
 export default app;

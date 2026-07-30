@@ -1,14 +1,14 @@
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { RecursiveCharacterTextSplitter }
+from "@langchain/textsplitters";
 
-class ChunkService {
+class RecursiveChunker {
 
-    async split(text) {
+    async chunk(text) {
 
         const splitter =
             new RecursiveCharacterTextSplitter({
 
                 chunkSize: 1000,
-
                 chunkOverlap: 200
 
             });
@@ -19,4 +19,4 @@ class ChunkService {
 
 }
 
-export default new ChunkService();
+export default new RecursiveChunker();
