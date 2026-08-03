@@ -104,6 +104,44 @@ class WorkspaceRepository {
 
     }
 
+    async findById(id) {
+
+        return prisma.workspaces.findUnique({
+
+            where: {
+                id
+            }
+
+        });
+
+    }
+
+    async update(id, data) {
+
+        return prisma.workspaces.update({
+
+            where: {
+                id
+            },
+
+            data
+
+        });
+
+    }
+
+    async delete(id) {
+
+        return prisma.workspaces.delete({
+
+            where: {
+                id
+            }
+
+        });
+
+    }
+
 }
 
 export default new WorkspaceRepository();

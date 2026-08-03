@@ -1,10 +1,8 @@
-import express from "express";
-
-import upload from "../config/multer.js";
-
-import { authenticate } from "../middleware/auth.middleware.js";
-
 import documentController from "../controllers/document.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
+import upload from "../config/multer.js";
+import express from "express";
 
 const router = express.Router();
 
@@ -13,11 +11,30 @@ router.post(
     "/upload",
 
     authenticate,
+    authorize("OWNER", "ADMIN", "EDITOR"),
 
-    upload.single("document"),
+    upload.single("file"),
 
     documentController.upload
 
+);
+
+router.get(
+    "/",
+    authenticate,
+    documentController.getDocuments
+);
+
+router.get(
+    "/:id",
+    authenticate,
+    documentController.getDocument
+);
+
+router.delete(
+    "/:id",
+    authenticate,
+    documentController.deleteDocument
 );
 
 

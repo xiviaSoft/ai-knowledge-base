@@ -1,6 +1,8 @@
 import chunkRepository from "../repositories/chunk.repository.js";
 import chunkService from "./chunk.service.js";
 import pdfService from "./pdf.service.js";
+import geminiEmbedder from "./embedders/gemini.embedder.js";
+import pineconeVectorStore from "./vectorstores/pinecone.vectorstore.js";
 import { v4 as uuid } from "uuid";
 
 class RagProcessor {
@@ -17,11 +19,9 @@ class RagProcessor {
 
         }
 
-        const chunks =
-            await chunkService.split(text);
+        const chunks = await chunkService.split(text);
 
-        console.log(chunks.length);
-        console.log(text);
+        console.log("Chunks:", chunks.length);
 
         await chunkRepository.createMany(
 
@@ -38,6 +38,22 @@ class RagProcessor {
             }))
 
         );
+
+        // Generate embeddings
+        const vectors = await geminiEmbedder.embedMany(chunks);
+
+        console.log("Embeddings:", vectors.length);
+
+        // Upload to Pinecone
+        await pineconeVectorStore.upsert({
+
+            document,
+
+            vectors
+
+        });
+
+        console.log("RAG Processing Completed");
 
     }
 

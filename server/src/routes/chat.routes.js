@@ -1,17 +1,33 @@
-import express from "express";
+import { Router } from "express";
 import chatController from "../controllers/chat.controller.js";
-import { authenticate } from "../middleware/auth.middleware.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post(
+router.post("/ask", authenticate, authorize(
+    "OWNER",
+    "ADMIN",
+    "EDITOR",
+    "VIEWER"
+), chatController.ask);
 
-    "/ask",
-
+router.get(
+    "/conversations",
     authenticate,
+    chatController.getConversations
+);
 
-    chatController.ask
+router.get(
+    "/conversations/:id",
+    authenticate,
+    chatController.getConversation
+);
 
+router.delete(
+    "/conversations/:id",
+    authenticate,
+    chatController.deleteConversation
 );
 
 export default router;

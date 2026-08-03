@@ -1,6 +1,6 @@
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
-import authRepository from "../repositories/auth.repository.js";
 import { comparePassword, hashPassword } from "../utils/password.js";
+import authRepository from "../repositories/auth.repository.js";
 import { generateSlug } from "../utils/slug.js";
 import { v4 as uuid } from "uuid";
 
@@ -110,12 +110,12 @@ class AuthService {
         const { email, password } = data;
 
         const user = await authRepository.findUserByEmail(email);
-        console.log("========== LOGIN DEBUG ==========");
+        console.log("LOGIN DEBUG ");
         console.log("Email from request:", email);
         console.log("User found:", user);
 
         if (!user) {
-            throw new Error("Invalid email or password.");
+            throw new Error("Invalid email.");
         }
 
         const isPasswordValid = await comparePassword(
@@ -126,7 +126,7 @@ class AuthService {
         console.log("Stored Password:", user.password);
         console.log("Password Match:", isPasswordValid);
         if (!isPasswordValid) {
-            throw new Error("Invalid email or password.");
+            throw new Error("Password is incorrect.");
         }
 
         const payload = {

@@ -91,7 +91,7 @@ class WorkspaceController {
 
         }
     }
-    
+
     async delete(req, res, next) {
 
         try {
@@ -108,6 +108,91 @@ class WorkspaceController {
             });
 
         } catch (error) {
+
+            next(error);
+
+        }
+
+    }
+
+    async getWorkspace(req, res, next) {
+
+        try {
+
+            const data =
+                await workspaceService.getWorkspace(
+                    req.params.id
+                );
+
+            res.json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
+
+    async updateWorkspace(req, res, next) {
+
+        try {
+
+            const data =
+                await workspaceService.updateWorkspace(
+
+                    req.params.id,
+
+                    req.body
+
+                );
+
+            res.json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
+
+    async deleteWorkspace(req, res, next) {
+
+        try {
+
+            const data =
+                await workspaceService.deleteWorkspace(
+                    req.params.id
+                );
+
+            res.json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
 
             next(error);
 

@@ -1,7 +1,8 @@
 ﻿import app from "./app.js";
 import prisma from "./config/prisma.js";
 import { env } from "./config/env.js";
-
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./docs/swagger.js";
 async function startServer() {
     try {
         await prisma.$connect();
@@ -20,5 +21,14 @@ async function startServer() {
         process.exit(1);
     }
 }
+app.use(
+
+    "/api/docs",
+
+    swaggerUi.serve,
+
+    swaggerUi.setup(swaggerSpec)
+
+);
 
 startServer();

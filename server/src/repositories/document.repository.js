@@ -25,6 +25,58 @@ class DocumentRepository {
 
     }
 
+    async findAllByWorkspace(workspaceId) {
+
+        return prisma.documents.findMany({
+
+            where: {
+                workspace_id: workspaceId
+            },
+
+            orderBy: {
+                created_at: "desc"
+            }
+
+        });
+
+    }
+
+    async findById(id) {
+
+        return prisma.documents.findUnique({
+
+            where: {
+                id
+            }
+
+        });
+
+    }
+
+    async delete(id) {
+
+        return prisma.documents.delete({
+
+            where: {
+                id
+            }
+
+        });
+
+    }
+
+    async findById(id) {
+
+        return prisma.documents.findUnique({
+
+            where: {
+                id
+            }
+
+        });
+
+    }
+
 }
 
 export default new DocumentRepository();

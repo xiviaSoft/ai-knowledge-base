@@ -119,7 +119,7 @@ class WorkspaceService {
         };
 
     }
-    
+
     async deleteWorkspace(workspaceId, userId) {
 
         const workspace =
@@ -137,6 +137,42 @@ class WorkspaceService {
 
         return {
             message: "Workspace deleted successfully."
+        };
+
+    }
+    async getWorkspace(id) {
+
+        const workspace =
+            await workspaceRepository.findById(id);
+
+        if (!workspace) {
+
+            throw new Error("Workspace not found.");
+
+        }
+
+        return workspace;
+
+    }
+
+    async updateWorkspace(id, data) {
+
+        return workspaceRepository.update(id, {
+
+            name: data.name
+
+        });
+
+    }
+
+    async deleteWorkspace(id) {
+
+        await workspaceRepository.delete(id);
+
+        return {
+
+            message: "Workspace deleted successfully."
+
         };
 
     }
