@@ -100,6 +100,67 @@ class WorkspaceMemberRepository {
         });
 
     }
+    async countByWorkspace(workspaceId) {
+
+        return prisma.workspace_members.count({
+
+            where: {
+                workspace_id: workspaceId
+            }
+
+        });
+
+    }
+    async getRecentMembers(workspaceId, limit = 5) {
+
+        return prisma.workspace_members.findMany({
+
+            where: {
+
+                workspace_id: workspaceId
+
+            },
+
+            include: {
+
+                users: {
+
+                    select: {
+
+                        first_name: true,
+
+                        last_name: true
+
+                    }
+
+                }
+
+            },
+
+            orderBy: {
+
+                joined_at: "desc"
+
+            },
+
+            take: limit
+
+        });
+
+    }
+    async deleteByWorkspace(workspaceId) {
+
+        return prisma.workspace_members.deleteMany({
+
+            where: {
+
+                workspace_id: workspaceId
+
+            }
+
+        });
+
+    }
 
 }
 

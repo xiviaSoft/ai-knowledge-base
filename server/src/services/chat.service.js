@@ -2,8 +2,8 @@ import pineconeRetriever from '../ai/retrievers/pinecone.retrievers.js';
 import geminiGenerator from "../ai/generators/gemini.generator.js";
 import chatRepository from "../repositories/chat.repository.js";
 import promptBuilder from "../ai/generators/prompt.builder.js";
+import { generateConversationTitle } from './gemini.service.js';
 import { v4 as uuid } from "uuid";
-
 class ChatService {
 
     async askQuestion(data) {
@@ -19,6 +19,22 @@ class ChatService {
                     title: data.question.substring(0, 50)
                 });
             conversationId = conversation.id;
+
+            if (!conversation.title) {
+                try {
+                    const title =
+                        await generateConversationTitle(data.question);
+                    await conversationRepository.updateTitle(
+                        conversation.id,
+                        title
+                    );
+                    conversation.title = title;
+                }
+                catch (error) {
+                    console.error("Title generation failed:", error);
+                }
+
+            }
         }
 
         await chatRepository.saveMessage({
@@ -77,7 +93,28 @@ class ChatService {
     async deleteConversation(id) {
         return await chatRepository.deleteConversation(id);
     }
+    async searchConversations(workspaceId, keyword) {
 
+        return conversationRepository.search(
+
+            workspaceId,
+
+            keyword
+
+        );
+
+    }
+    async globalSearch(workspaceId, keyword) {
+
+        return await chatRepository.globalSearch(
+
+            workspaceId,
+
+            keyword
+
+        );
+
+    }
 }
 
 export default new ChatService();

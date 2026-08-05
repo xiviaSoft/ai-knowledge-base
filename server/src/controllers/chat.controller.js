@@ -105,7 +105,65 @@ class ChatController {
         }
 
     }
+    async search(req, res, next) {
 
+        try {
+
+            const data =
+                await chatService.searchConversations(
+
+                    req.query.workspaceId,
+
+                    req.query.q
+
+                );
+
+            res.json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
+    async globalSearch(req, res, next) {
+
+        try {
+
+            const data = await chatService.globalSearch(
+
+                req.query.workspaceId,
+
+                req.query.q
+
+            );
+
+            res.status(200).json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
 }
 
 export default new ChatController();

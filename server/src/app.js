@@ -4,9 +4,9 @@ import workspaceRoutes from "./routes/workspace.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import documentRoutes from './routes/document.routes.js'
 import searchRoutes from "./routes/search.routes.js";
+import healthRoutes from "./routes/health.routes.js";
+import apiKeyRoutes from "./routes/apiKey.routes.js";
 import chatRoutes from './routes/chat.routes.js'
-// import swaggerSpec from "./docs/swagger.js";
-// import swaggerUi from "swagger-ui-express";
 import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
 import compression from "compression";
@@ -36,6 +36,7 @@ app.use("/api", routes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/health", healthRoutes);
 app.use("/api/search", searchRoutes);
-// app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api/workspaces", apiKeyRoutes);
 export default app;

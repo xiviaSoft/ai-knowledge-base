@@ -40,4 +40,10 @@ router.delete(
     authorize("OWNER"),
     workspaceController.deleteWorkspace
 );
+router.get(
+    "/:id/activity",
+    authenticate,
+    authorize("OWNER", "ADMIN", "EDITOR", "VIEWER"),
+    workspaceController.getRecentActivity
+);
 export default router;

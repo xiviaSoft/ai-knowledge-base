@@ -1,8 +1,11 @@
-import { v4 as uuid } from "uuid";
-import prisma from "../config/prisma.js";
 import workspaceRepository from "../repositories/workspace.repository.js";
 import { generateSlug } from "../utils/slug.js";
-
+import chatRepository from "../repositories/chat.repository.js";
+import documentRepository from "../repositories/document.repository.js";
+import workspaceMemberRepository from "../repositories/workspaceMember.repository.js";
+import documentService from "./document.service.js";
+import prisma from "../config/prisma.js";
+import { v4 as uuid } from "uuid";
 class WorkspaceService {
 
     async createWorkspace(userId, data) {
@@ -176,6 +179,118 @@ class WorkspaceService {
         };
 
     }
+    async getRecentActivity(workspaceId) {
+
+        const [
+
+            documents,
+
+            conversations,
+
+            members
+
+        ] = await Promise.all([
+
+            documentRepository.getRecentDocuments(workspaceId),
+
+            chatRepository.getRecentConversations(workspaceId),
+
+            workspaceMemberRepository.getRecentMembers(workspaceId)
+
+        ]);
+
+        const activities = [];
+
+        documents.forEach(document => {
+
+            activities.push({
+
+                type: "DOCUMENT_UPLOAD",
+
+                title: `${document.original_name} uploaded`,
+
+                time: document.created_at
+
+            });
+
+        });
+
+        conversations.forEach(conversation => {
+
+            activities.push({
+
+                type: "CHAT",
+
+                title: conversation.title || "New Conversation",
+
+                time: conversation.created_at
+
+            });
+
+        });
+
+        members.forEach(member => {
+
+            activities.push({
+
+                type: "MEMBER",
+
+                title: `${member.users.first_name} ${member.users.last_name ?? ""} joined workspace`.trim(),
+
+                time: member.joined_at
+
+            });
+
+        });
+
+        activities.sort((a, b) =>
+
+            new Date(b.time) - new Date(a.time)
+
+        );
+
+        return activities.slice(0, 20);
+
+    }
+    async deleteWorkspace(workspaceId) {
+
+        const documents =
+            await documentRepository.findAll(workspaceId);
+
+        for (const document of documents) {
+
+            await documentService.deleteDocument(document.id);
+
+        }
+
+        await chatRepository.deleteMessagesByWorkspace(
+
+            workspaceId
+
+        );
+
+        await chatRepository.deleteConversationsByWorkspace(
+
+            workspaceId
+
+        );
+
+        await workspaceMemberRepository.deleteByWorkspace(
+
+            workspaceId
+
+        );
+
+        await workspaceRepository.delete(workspaceId);
+
+        return {
+
+            message: "Workspace deleted successfully."
+
+        };
+
+    }
+
 }
 
 export default new WorkspaceService();

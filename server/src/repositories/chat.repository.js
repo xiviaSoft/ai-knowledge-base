@@ -106,6 +106,195 @@ class ChatRepository {
         });
 
     }
+    async countByWorkspace(workspaceId) {
+
+        return prisma.conversations.count({
+
+            where: {
+                workspace_id: workspaceId
+            }
+
+        });
+
+    }
+
+    async getRecent(workspaceId, limit = 5) {
+
+        return prisma.conversations.findMany({
+
+            where: {
+                workspace_id: workspaceId
+            },
+
+            select: {
+
+                id: true,
+
+                title: true,
+
+                created_at: true
+
+            },
+
+            orderBy: {
+
+                created_at: "desc"
+
+            },
+
+            take: limit
+
+        });
+
+    }
+    async updateTitle(id, title) {
+
+        return prisma.conversations.update({
+
+            where: {
+                id
+            },
+
+            data: {
+                title
+            }
+
+        });
+
+    }
+    async search(workspaceId, keyword) {
+
+        return prisma.conversations.findMany({
+            where: {
+                workspace_id: workspaceId,
+                title: {
+                    contains: keyword
+                }
+            },
+            orderBy: {
+                created_at: "desc"
+            }
+        });
+    }
+    async getRecentConversations(workspaceId, limit = 5) {
+
+        return prisma.conversations.findMany({
+
+            where: {
+
+                workspace_id: workspaceId
+
+            },
+
+            select: {
+
+                title: true,
+
+                created_at: true
+
+            },
+
+            orderBy: {
+
+                created_at: "desc"
+
+            },
+
+            take: limit
+
+        });
+
+    }
+    async deleteMessagesByWorkspace(workspaceId) {
+
+        return prisma.messages.deleteMany({
+
+            where: {
+
+                conversations: {
+
+                    workspace_id: workspaceId
+
+                }
+
+            }
+
+        });
+
+    }
+
+    async deleteConversationsByWorkspace(workspaceId) {
+
+        return prisma.conversations.deleteMany({
+
+            where: {
+
+                workspace_id: workspaceId
+
+            }
+
+        });
+
+    }
+    async globalSearch(workspaceId, keyword) {
+
+        const documents = await prisma.documents.findMany({
+
+            where: {
+
+                workspace_id: workspaceId,
+
+                original_name: {
+
+                    contains: keyword
+
+                }
+
+            },
+
+            select: {
+
+                id: true,
+
+                original_name: true
+
+            }
+
+        });
+
+        const conversations = await prisma.conversations.findMany({
+
+            where: {
+
+                workspace_id: workspaceId,
+
+                title: {
+
+                    contains: keyword
+
+                }
+
+            },
+
+            select: {
+
+                id: true,
+
+                title: true
+
+            }
+
+        });
+
+        return {
+
+            documents,
+
+            conversations
+
+        };
+
+    }
 
 }
 

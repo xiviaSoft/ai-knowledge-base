@@ -199,6 +199,61 @@ class WorkspaceController {
         }
 
     }
+    async getRecentActivity(req, res, next) {
+
+        try {
+
+            const data = await workspaceService.getRecentActivity(
+
+                req.params.id
+
+            );
+
+            res.status(200).json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
+    async deleteWorkspace(req, res, next) {
+
+        try {
+
+            const data =
+                await workspaceService.deleteWorkspace(
+
+                    req.params.id
+
+                );
+
+            res.status(200).json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
 
 }
 

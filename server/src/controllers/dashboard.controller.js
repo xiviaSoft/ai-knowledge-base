@@ -28,7 +28,32 @@ class DashboardController {
         }
 
     }
+    async getDashboard(req, res, next) {
+
+        try {
+
+            const data =
+                await dashboardService.getDashboard(req.params.id);
+
+            res.status(200).json({
+
+                success: true,
+
+                data
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
 
 }
 
 export default new DashboardController();
+

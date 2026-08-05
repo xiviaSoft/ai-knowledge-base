@@ -83,6 +83,7 @@ model workspaces {
   plan              workspaces_plan?    @default(FREE)
   created_at        DateTime?           @default(now()) @db.Timestamp(0)
   updated_at        DateTime?           @default(now()) @db.Timestamp(0)
+  api_keys          api_keys[]
   conversations     conversations[]
   documents         documents[]
   workspace_members workspace_members[]
@@ -145,6 +146,17 @@ model messages {
   conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_message_conversation")
 
   @@index([conversation_id], map: "fk_message_conversation")
+}
+
+model api_keys {
+  id           String     @id @db.Char(36)
+  workspace_id String     @db.Char(36)
+  name         String     @db.VarChar(100)
+  key          String     @unique @db.VarChar(255)
+  created_at   DateTime?  @default(now()) @db.Timestamp(0)
+  workspaces   workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
 }
 
 enum workspace_members_role {

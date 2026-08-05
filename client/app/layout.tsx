@@ -1,18 +1,17 @@
-import "./globals.css";
-import ThemeRegistry from "./theme/themeRegistry";
+import { AuthProvider } from "./contexts/AuthContext";
+import EmotionRegistry from "./theme/EmotionRegistry";
 
-export const metadata = {
-  title: "AI Knowledge Assistant",
-  description: "RAG + Wikipedia + Gemini",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
-        <ThemeRegistry>
-          {children}
-        </ThemeRegistry>
+        <EmotionRegistry>
+          <AuthProvider>{children}</AuthProvider>
+        </EmotionRegistry>
       </body>
     </html>
   );

@@ -29,5 +29,15 @@ router.delete(
     authenticate,
     chatController.deleteConversation
 );
+router.get(
+    "/search",
+    authenticate,
+    chatController.search
+);
+router.get(
+    "/global-search",
+    authenticate,
+    chatController.globalSearch
+);
 
 export default router;
