@@ -10,7 +10,7 @@ class WorkspaceService {
 
     }
 
-    async create(data) {
+    async create(data: any) {
 
         const response = await api.post(
 
@@ -24,7 +24,7 @@ class WorkspaceService {
 
     }
 
-    async update(id, data) {
+    async update(id: any, data: any) {
 
         const response = await api.patch(
 
@@ -38,7 +38,7 @@ class WorkspaceService {
 
     }
 
-    async delete(id) {
+    async delete(id: any) {
 
         const response = await api.delete(
 
@@ -49,7 +49,18 @@ class WorkspaceService {
         return response.data;
 
     }
+    async getById(workspaceId: string) {
 
+        const { data } = await api.get(
+
+            `/workspaces/${workspaceId}`
+
+        );
+
+        return data;
+
+    }
+    
 }
 
 export default new WorkspaceService();

@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
+
 import {
     Dialog,
-    DialogTitle,
     DialogContent,
-    DialogActions,
-    TextField,
-    Button
+    Typography,
+    Stack,
+    Box,
+    IconButton
 } from "@mui/material";
-import workspaceService from "@/app/services/workspace.service";
 
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+
+import { Button, Input } from "../ui";
+
+import workspaceService from "../../services/workspace.service";
 
 export default function CreateWorkspaceDialog({
 
@@ -59,52 +65,152 @@ export default function CreateWorkspaceDialog({
     return (
 
         <Dialog
+
             open={open}
+
             onClose={onClose}
-            fullWidth
+
             maxWidth="sm"
+
+            fullWidth
+
         >
 
-            <DialogTitle>
+            <DialogContent sx={{ p: 4 }}>
 
-                Create Workspace
-
-            </DialogTitle>
-
-            <DialogContent>
-
-                <TextField
-                    autoFocus
-                    fullWidth
-                    margin="normal"
-                    label="Workspace Name"
-                    value={name}
-                    onChange={(e) =>
-                        setName(e.target.value)
-                    }
-                />
-
-            </DialogContent>
-
-            <DialogActions>
-
-                <Button onClick={onClose}>
-
-                    Cancel
-
-                </Button>
-
-                <Button
-                    variant="contained"
-                    onClick={handleCreate}
-                    disabled={loading}
+                <Stack
+                    direction="row"
+                    sx={{ justifyContent: 'space-between', alignItems: 'center' }}
                 >
 
-                    Create
+                    <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                    >
 
-                </Button>
+                        <Box
 
-            </DialogActions>
+                            sx={{
+
+                                width: 56,
+
+                                height: 56,
+
+                                borderRadius: 3,
+
+                                bgcolor: "primary.main",
+
+                                display: "flex",
+
+                                alignItems: "center",
+
+                                justifyContent: "center",
+
+                                color: "#fff"
+
+                            }}
+
+                        >
+
+                            <FolderRoundedIcon />
+
+                        </Box>
+
+                        <Box>
+
+                            <Typography
+                                variant="h5"
+                                sx={{ fontWeight: 700 }}
+                            >
+
+                                New Workspace
+
+                            </Typography>
+
+                            <Typography
+
+                                color="text.secondary"
+
+                            >
+
+                                Create a workspace for your AI documents.
+
+                            </Typography>
+
+                        </Box>
+
+                    </Box>
+
+                    <IconButton onClick={onClose}>
+
+                        <CloseRoundedIcon />
+
+                    </IconButton>
+
+                </Stack>
+
+                <Box sx={{ mt: 4 }}>
+
+                    <Input
+
+                        label="Workspace Name"
+
+                        placeholder="Example: AI Research"
+
+                        value={name}
+
+                        onChange={(e: any) =>
+
+                            setName(e.target.value)
+
+                        }
+
+                    />
+
+                </Box>
+
+                <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ justifyContent: 'flex-end', mt: 5 }}
+                >
+
+                    <Button
+
+                        variant="outlined"
+
+                        onClick={onClose}
+
+                    >
+
+                        Cancel
+
+                    </Button>
+
+                    <Button
+
+                        variant="contained"
+
+                        disabled={loading}
+
+                        onClick={handleCreate}
+
+                    >
+
+                        {
+
+                            loading
+
+                                ? "Creating..."
+
+                                : "Create Workspace"
+
+                        }
+
+                    </Button>
+
+                </Stack>
+
+            </DialogContent>
 
         </Dialog>
 

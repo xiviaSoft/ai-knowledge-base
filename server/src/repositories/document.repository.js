@@ -172,6 +172,25 @@ class DocumentRepository {
         });
 
     }
+    async findByWorkspace(workspaceId) {
+
+    return prisma.documents.findMany({
+
+        where: {
+
+            workspace_id: workspaceId
+
+        },
+
+        orderBy: {
+
+            created_at: "desc"
+
+        }
+
+    });
+
+}
 }
 
 export default new DocumentRepository();

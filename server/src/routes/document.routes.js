@@ -26,9 +26,9 @@ router.get(
 );
 
 router.get(
-    "/:id",
+    "/workspace/:workspaceId",
     authenticate,
-    documentController.getDocument
+    documentController.getDocumentsByWorkspace
 );
 
 router.delete(

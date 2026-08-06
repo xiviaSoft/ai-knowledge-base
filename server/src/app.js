@@ -34,7 +34,7 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", workspaceMemberRoutes);
 app.use("/api", routes);
 app.use("/api/documents", documentRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/workspaces", dashboardRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/search", searchRoutes);

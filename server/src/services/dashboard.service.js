@@ -52,15 +52,17 @@ class DashboardService {
 
             workspace,
 
-            statistics: {
+            stats: {
 
                 documents,
 
-                conversations,
-
                 members,
 
-                storageUsed: storage
+                chats: conversations,
+
+                storageUsed: storage,
+
+                apiKeys: 0 
 
             },
 

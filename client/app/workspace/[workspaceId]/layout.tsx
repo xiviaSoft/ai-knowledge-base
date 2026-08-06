@@ -1,64 +1,60 @@
-
-
 import WorkspaceNavbar from "@/app/components/layout/WorkspaceNavbar";
 import WorkspaceSidebar from "@/app/components/layout/WorkspaceSidebar";
+
 import {
-
     Box,
-
     Toolbar
-
 } from "@mui/material";
 
 export default async function WorkspaceLayout({
-
     children,
-
-    params
-
 }: {
-
     children: React.ReactNode;
-
-    params: {
-
-        workspaceId: string
-
-    }
-
 }) {
 
     return (
 
-        <>
+        <Box
+            sx={{
+                display: "flex",
+                height: "100vh",
+                overflow: "hidden",
+                bgcolor: "#F8FAFC"
+            }}
+        >
 
             <WorkspaceNavbar />
 
-            <WorkspaceSidebar
-
-                workspaceId={params.workspaceId}
-
-            />
+            <WorkspaceSidebar />
 
             <Box
-
+                component="main"
                 sx={{
-
-                    ml: "260px",
-
-                    p: 4
-
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: 0,
+                    overflow: "hidden"
                 }}
-
             >
 
                 <Toolbar />
 
-                {children}
+                <Box
+                    sx={{
+                        flex: 1,
+                        overflow: "auto",
+                        bgcolor: "#F8FAFC"
+                    }}
+                >
+
+                    {children}
+
+                </Box>
 
             </Box>
 
-        </>
+        </Box>
 
     );
 

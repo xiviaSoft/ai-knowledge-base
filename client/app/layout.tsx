@@ -1,17 +1,10 @@
-import { AuthProvider } from "./contexts/AuthContext";
-import EmotionRegistry from "./theme/EmotionRegistry";
+import ClientProviders from "./providers/ClientProviders";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <EmotionRegistry>
-          <AuthProvider>{children}</AuthProvider>
-        </EmotionRegistry>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

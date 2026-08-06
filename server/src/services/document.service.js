@@ -39,13 +39,15 @@ class DocumentService {
 
     }
 
-    async getDocument(id) {
+   async getDocumentsByWorkspace(workspaceId) {
 
-        const document = await documentRepository.findById(id);
+    return documentRepository.findByWorkspace(
 
-        return serializeBigInt(document);
+        workspaceId
 
-    }
+    );
+
+}
 
     async deleteDocument(id) {
         return await documentRepository.delete(id);

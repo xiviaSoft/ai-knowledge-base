@@ -85,7 +85,33 @@ class DocumentController {
         }
 
     }
+    async getDocumentsByWorkspace(req, res, next) {
 
+        try {
+
+            const documents = await documentService.getDocumentsByWorkspace(
+
+                req.params.workspaceId
+
+            );
+
+            res.json({
+
+                success: true,
+
+                documents
+
+            });
+
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
     async deleteDocument(req, res, next) {
 
         try {

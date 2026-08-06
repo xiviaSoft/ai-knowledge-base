@@ -1,44 +1,20 @@
-"use client";
-
 import { createTheme } from "@mui/material/styles";
 
+import palette from "./palette";
+import typography from "./typography";
+import shadows from "./shadows";
+import components from "./components";
+
 const theme = createTheme({
-  palette: {
-    mode: "light",
 
-    primary: {
-      main: "#2563EB",
-    },
+    palette,
 
-    secondary: {
-      main: "#0F172A",
-    },
+    typography,
 
-    background: {
-      default: "#F4F7FB",
-      paper: "#FFFFFF",
-    },
-  },
+    shadows,
 
-  shape: {
-    borderRadius: 16,
-  },
+    components
 
-  typography: {
-    fontFamily: "Inter, sans-serif",
-
-    h4: {
-      fontWeight: 700,
-    },
-
-    h5: {
-      fontWeight: 600,
-    },
-
-    body1: {
-      fontSize: "1rem",
-    },
-  },
 });
 
 export default theme;
