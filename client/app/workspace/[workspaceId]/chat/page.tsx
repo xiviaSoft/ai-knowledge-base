@@ -2,135 +2,258 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-
-import ChatLayout from "@/app/components/chat/ChatLayout";
-import ConversationSidebar from "@/app/components/chat/ConversationSidebar";
-import ChatHeader from "@/app/components/chat/ChatHeader";
-import MessageList from "@/app/components/chat/MessageList";
-import ChatInput from "@/app/components/chat/ChatInput";
-import EmptyChat from "@/app/components/chat/EmptyChat";
 import { Box } from "@mui/material";
+
+import ConversationSidebar
+    from "@/app/components/chat/ConversationSidebar";
+
+import MessageList
+    from "@/app/components/chat/MessageList";
+
+import ChatHeader
+    from "@/app/components/chat/ChatHeader";
+
+import EmptyChat
+    from "@/app/components/chat/EmptyChat";
+
+import ChatInput
+    from "@/app/components/chat/ChatInput";
+
+import useChat
+    from "@/app/hooks/useChat";
+
+import chatService
+    from "@/app/services/chat.service";
+
+import type {
+    Conversation
+} from "@/app/components/chat/ConversationSidebar";
+
 
 export default function ChatPage() {
 
-    const { workspaceId } = useParams();
+    const params = useParams();
 
-    const [messages, setMessages] = useState<any[]>([]);
+    const workspaceId =
+        params.workspaceId as string;
 
-    const [conversations, setConversations] = useState<any[]>([]);
 
-    const [selectedConversation, setSelectedConversation] = useState<any>(null);
+    const [
+        refreshKey,
+        setRefreshKey
+    ] = useState(0);
 
-    function createConversation() {
 
-        setSelectedConversation(null);
+    const {
+        messages,
+        loading,
+        conversationId,
+        conversationTitle,
+        sendMessage,
+        newConversation,
+        loadConversation
+    } = useChat(
+        workspaceId,
+        {
+            onConversationCreated: () => {
 
-        setMessages([]);
+                setRefreshKey(
+                    (prev) => prev + 1
+                );
 
-    }
+            }
+        }
+    );
 
-    async function handleSend(text: string) {
 
-        const userMessage = {
+    /*
+     * New conversation.
+     */
+    const handleNewChat = () => {
 
-            id: Date.now(),
+        newConversation();
 
-            role: "USER",
+    };
 
-            content: text
 
-        };
+    /*
+     * Select existing conversation.
+     */
+    const handleSelectConversation = async (
+        conversation: Conversation
+    ) => {
 
-        setMessages((prev) => [
+        await loadConversation(
+            conversation
+        );
 
-            ...prev,
+    };
 
-            userMessage
 
-        ]);
+    /*
+     * Delete conversation.
+     */
+    const handleDeleteConversation = async (
+        id: string
+    ) => {
 
-        // Backend integration will be added next
-    }
+        try {
+
+            await chatService.deleteConversation(
+                id
+            );
+
+
+            /*
+             * If the deleted conversation
+             * is currently active,
+             * return to new conversation.
+             */
+            if (
+                conversationId === id
+            ) {
+
+                newConversation();
+
+            }
+
+
+            /*
+             * Refresh sidebar.
+             */
+            setRefreshKey(
+                (prev) => prev + 1
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to delete conversation:",
+                error
+            );
+
+            throw error;
+        }
+    };
+
 
     return (
 
         <Box
             sx={{
                 display: "flex",
+                width: "100%",
                 height: "100%",
+                minHeight: 0,
                 overflow: "hidden",
                 bgcolor: "#F6F8FC"
             }}
         >
 
+            {/* Conversation Sidebar */}
+
             <ConversationSidebar
 
-                conversations={conversations}
+                workspaceId={
+                    workspaceId
+                }
 
-                workspaceId={workspaceId}
+                activeConversationId={
+                    conversationId
+                }
 
-                onNewChat={createConversation}
+                refreshKey={
+                    refreshKey
+                }
+
+                onNewChat={
+                    handleNewChat
+                }
+
+                onSelectConversation={
+                    handleSelectConversation
+                }
+
+                onDeleteConversation={
+                    handleDeleteConversation
+                }
 
             />
+
+
+            {/* Main Chat */}
+
             <Box
                 sx={{
                     flex: 1,
+                    minWidth: 0,
+                    minHeight: 0,
                     display: "flex",
                     flexDirection: "column"
                 }}
             >
 
+                {/* Header */}
+
                 <ChatHeader
-
                     title={
-
-                        selectedConversation?.title ||
-
-                        "New Conversation"
-
+                        conversationTitle
                     }
-
                 />
+
+
+                {/* Messages */}
 
                 <Box
                     sx={{
                         flex: 1,
+                        minHeight: 0,
                         overflowY: "auto",
-                        px: 5,
+                        overflowX: "hidden",
+
+                        px: {
+                            xs: 2,
+                            sm: 3,
+                            md: 5
+                        },
+
                         py: 4
                     }}
                 >
 
-                    {
+                    {messages.length === 0 ? (
 
-                        messages.length === 0 ? (
+                        <EmptyChat />
 
-                            <EmptyChat />
+                    ) : (
 
-                        ) : (
+                        <MessageList
+                            messages={
+                                messages
+                            }
+                        />
 
-                            <MessageList
-
-                                messages={messages}
-
-                            />
-
-                        )
-
-                    }
+                    )}
 
                 </Box>
 
+
+                {/* Input */}
+
                 <ChatInput
 
-                    onSend={handleSend}
+                    onSend={
+                        sendMessage
+                    }
+
+                    disabled={
+                        loading
+                    }
 
                 />
 
             </Box>
 
         </Box>
-
     );
-
 }

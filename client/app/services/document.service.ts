@@ -9,8 +9,8 @@ class DocumentService {
         );
 
         return data;
-
     }
+
 
     async getById(documentId: string) {
 
@@ -19,8 +19,8 @@ class DocumentService {
         );
 
         return data;
-
     }
+
 
     async upload(
         formData: FormData,
@@ -28,65 +28,51 @@ class DocumentService {
     ) {
 
         const { data } = await api.post(
-
             "/documents/upload",
-
             formData,
-
             {
-
-                headers: {
-
-                    "Content-Type": "multipart/form-data"
-
-                },
-
                 onUploadProgress: (event) => {
 
-                    if (!event.total) return;
+                    if (!event.total) {
+                        return;
+                    }
 
                     const progress = Math.round(
-
                         (event.loaded * 100) / event.total
-
                     );
 
                     onProgress?.(progress);
-
                 }
-
             }
-
         );
 
         return data;
-
     }
 
-    async update(documentId: string, payload: any) {
+
+    async update(
+        documentId: string,
+        payload: any
+    ) {
 
         const { data } = await api.patch(
-
             `/documents/${documentId}`,
-
             payload
-
         );
 
         return data;
-
     }
 
-    async delete(documentId: string) {
+
+    async delete(
+        documentId: string
+    ) {
 
         const { data } = await api.delete(
-
             `/documents/${documentId}`
-
         );
 
         return data;
-
     }
 
 }

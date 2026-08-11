@@ -6,18 +6,29 @@ import { v4 as uuid } from "uuid";
 const uploadPath = "uploads/documents";
 
 if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
+    fs.mkdirSync(uploadPath, {
+        recursive: true
+    });
 }
+
 
 const storage = multer.diskStorage({
 
     destination(req, file, cb) {
-        cb(null, uploadPath);
+
+        cb(
+            null,
+            uploadPath
+        );
+
     },
 
     filename(req, file, cb) {
 
-        const extension = path.extname(file.originalname);
+        const extension =
+            path.extname(
+                file.originalname
+            );
 
         cb(
             null,
@@ -28,27 +39,62 @@ const storage = multer.diskStorage({
 
 });
 
-const fileFilter = (req, file, cb) => {
+
+const fileFilter = (
+    req,
+    file,
+    cb
+) => {
+
+    console.log(
+        "========== MULTER =========="
+    );
+
+    console.log(
+        "Multer field:",
+        file.fieldname
+    );
+
+    console.log(
+        "Multer original name:",
+        file.originalname
+    );
+
+    console.log(
+        "Multer mimetype:",
+        file.mimetype
+    );
+
 
     const allowed = [
+
         "application/pdf",
 
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 
         "text/plain"
+
     ];
+
 
     if (!allowed.includes(file.mimetype)) {
 
         return cb(
-            new Error("Only PDF, DOCX and TXT files are allowed.")
+            new Error(
+                "Only PDF, DOCX and TXT files are allowed."
+            )
         );
 
     }
 
-    cb(null, true);
+
+    cb(
+        null,
+        true
+    );
 
 };
+
 
 const upload = multer({
 
@@ -57,9 +103,13 @@ const upload = multer({
     fileFilter,
 
     limits: {
-        fileSize: 20 * 1024 * 1024
+
+        fileSize:
+            20 * 1024 * 1024
+
     }
 
 });
+
 
 export default upload;

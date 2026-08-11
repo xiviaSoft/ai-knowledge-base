@@ -1,21 +1,94 @@
 import documentService from "../services/document.service.js";
 import { serializeBigInt } from "../utils/slug.js";
+
 class DocumentController {
 
     async upload(req, res, next) {
 
         try {
 
+            console.log(
+                "========== DOCUMENT UPLOAD =========="
+            );
+
+            console.log(
+                "User:",
+                req.user?.id
+            );
+
+            console.log(
+                "Body:",
+                req.body
+            );
+
+            console.log(
+                "Workspace:",
+                req.body?.workspaceId
+            );
+
+            console.log(
+                "File:",
+                req.file
+            );
+
+
+            /*
+             * Multer parses multipart/form-data.
+             *
+             * Therefore:
+             *
+             * req.file
+             *      -> uploaded file
+             *
+             * req.body.workspaceId
+             *      -> workspace ID
+             */
+
+            if (!req.file) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message: "No file was uploaded."
+
+                });
+
+            }
+
+
+            const workspaceId =
+                req.body?.workspaceId;
+
+
+            if (!workspaceId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message: "Workspace ID is required."
+
+                });
+
+            }
+
+
+            /*
+             * Upload document
+             */
+
             const result =
                 await documentService.uploadDocument(
 
                     req.user.id,
 
-                    req.body.workspaceId,
+                    workspaceId,
 
                     req.file
 
                 );
+
 
             return res.status(201).json({
 
@@ -29,77 +102,35 @@ class DocumentController {
 
         catch (error) {
 
+            console.error(
+                "Document upload controller error:",
+                error
+            );
+
             next(error);
 
         }
 
     }
+
+
     async getDocuments(req, res, next) {
 
         try {
 
-            const documents = await documentService.getDocuments(
+            const documents =
+                await documentService.getDocuments(
+                    req.query.workspaceId
+                );
 
-                req.query.workspaceId
 
-            );
-
-            res.status(200).json({
-
-                success: true,
-
-                data: serializeBigInt(documents)
-
-            });
-
-        } catch (error) {
-
-            next(error);
-
-        }
-
-    }
-
-    async getDocument(req, res, next) {
-
-        try {
-
-            const document = await documentService.getDocument(
-
-                req.params.id
-
-            );
-
-            res.status(200).json({
+            return res.status(200).json({
 
                 success: true,
 
-                data: serializeBigInt(document)
-
-            });
-
-        } catch (error) {
-
-            next(error);
-
-        }
-
-    }
-    async getDocumentsByWorkspace(req, res, next) {
-
-        try {
-
-            const documents = await documentService.getDocumentsByWorkspace(
-
-                req.params.workspaceId
-
-            );
-
-            res.json({
-
-                success: true,
-
-                documents
+                data: serializeBigInt(
+                    documents
+                )
 
             });
 
@@ -112,18 +143,70 @@ class DocumentController {
         }
 
     }
-    async deleteDocument(req, res, next) {
+
+
+    async getDocumentsByWorkspace(
+        req,
+        res,
+        next
+    ) {
 
         try {
 
-            const response = await documentService.deleteDocument(req.params.id);
+            const documents =
+                await documentService.getDocumentsByWorkspace(
+                    req.params.workspaceId
+                );
 
-            res.status(200).json({
+
+            return res.status(200).json({
+
                 success: true,
-                data: response
+
+                documents: serializeBigInt(
+                    documents
+                )
+
             });
 
-        } catch (error) {
+        }
+
+        catch (error) {
+
+            next(error);
+
+        }
+
+    }
+
+
+    async deleteDocument(
+        req,
+        res,
+        next
+    ) {
+
+        try {
+
+            const response =
+                await documentService.deleteDocument(
+                    req.params.id
+                );
+
+
+            return res.status(200).json({
+
+                success: true,
+
+                data: serializeBigInt(
+                    response
+                )
+
+            });
+
+        }
+
+        catch (error) {
 
             next(error);
 

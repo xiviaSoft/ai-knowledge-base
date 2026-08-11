@@ -2,50 +2,174 @@ import index from "../../config/pinecone.js";
 
 class PineconeVectorStore {
 
-    async upsert(context) {
+    async upsert({ document, vectors }) {
 
-        const vectors = context.vectors.map((vector, indexNumber) => ({
+        if (!document?.workspace_id) {
 
-            id: `${context.document.id}_${indexNumber}`,
+            throw new Error(
+                "Document workspace_id is required for Pinecone indexing."
+            );
 
-            values: vector.embedding,
+        }
 
-            metadata: {
+        if (!document?.id) {
 
-                workspaceId: context.document.workspace_id,
+            throw new Error(
+                "Document id is required for Pinecone indexing."
+            );
 
-                documentId: context.document.id,
+        }
 
-                chunkIndex: indexNumber,
+        if (!vectors?.length) {
 
-                text: vector.pageContent
+            throw new Error(
+                "No vectors provided for Pinecone indexing."
+            );
+
+        }
+
+
+        const namespace =
+            index.namespace(
+                document.workspace_id
+            );
+
+
+        const pineconeVectors =
+            vectors.map((vector, indexNumber) => ({
+
+                id: `${document.id}_${indexNumber}`,
+
+                values: vector.embedding,
+
+                metadata: {
+
+                    workspaceId:
+                        document.workspace_id,
+
+                    documentId:
+                        document.id,
+
+                    chunkIndex:
+                        indexNumber,
+
+                    text:
+                        vector.pageContent
+
+                }
+
+            }));
+
+
+        console.log(
+            "Pinecone indexing:",
+            {
+
+                workspaceId:
+                    document.workspace_id,
+
+                documentId:
+                    document.id,
+
+                namespace:
+                    document.workspace_id,
+
+                vectorCount:
+                    pineconeVectors.length
 
             }
+        );
 
-        }));
-        await index.namespace(context.document.workspace_id).upsert(vectors);
+
+        await namespace.upsert(
+            pineconeVectors
+        );
+
+
+        console.log(
+            `Successfully indexed ${pineconeVectors.length} vectors.`
+        );
+
+
+        return {
+
+            workspaceId:
+                document.workspace_id,
+
+            documentId:
+                document.id,
+
+            vectorCount:
+                pineconeVectors.length
+
+        };
+
     }
-    
-    async deleteDocumentVectors(workspaceId, documentId, chunkCount) {
 
-        const ids = [];
 
-        for (let i = 0; i < chunkCount; i++) {
-            ids.push(`${documentId}_${i}`);
+    async deleteDocumentVectors(
+        workspaceId,
+        documentId,
+        chunkCount
+    ) {
+
+        if (!workspaceId) {
+
+            throw new Error(
+                "Workspace ID is required."
+            );
+
         }
 
-        console.log("Deleting IDs:", ids);
+        if (!documentId) {
 
-        if (ids.length === 0) {
-            console.log("No vectors to delete.");
+            throw new Error(
+                "Document ID is required."
+            );
+
+        }
+
+        if (!chunkCount || chunkCount <= 0) {
+
+            console.log(
+                "No vectors to delete."
+            );
+
             return;
+
         }
+
+
+        const ids = Array.from(
+            { length: Number(chunkCount) },
+            (_, indexNumber) =>
+                `${documentId}_${indexNumber}`
+        );
+
+
+        console.log(
+            "Deleting Pinecone vectors:",
+            {
+
+                workspaceId,
+
+                documentId,
+
+                count: ids.length
+
+            }
+        );
+
 
         await index
             .namespace(workspaceId)
             .deleteMany(ids);
 
-        console.log("Vectors deleted successfully.");
+
+        console.log(
+            "Vectors deleted successfully."
+        );
+
     }
 
 }

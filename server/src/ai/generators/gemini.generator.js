@@ -4,7 +4,7 @@ class GeminiGenerator {
 
     async generate(prompt) {
 
-        const response = await ai.models.generateContentStream({
+        const response = await ai.models.generateContent({
 
             model: "gemini-3.1-flash-lite",
 
@@ -12,7 +12,17 @@ class GeminiGenerator {
 
         });
 
-        return response.text;
+        const text = response.text;
+
+        if (!text) {
+
+            throw new Error(
+                "Gemini returned an empty response."
+            );
+
+        }
+
+        return text;
 
     }
 

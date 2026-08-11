@@ -65,7 +65,7 @@ export function AuthProvider({
         logout,
       }}
     >
-      {children}
+      {loading ? null : children}
     </AuthContext.Provider>
   );
 }

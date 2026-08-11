@@ -95,17 +95,32 @@ class ChatRepository {
 
     }
 
-    async deleteConversation(conversationId) {
+   async deleteConversation(id) {
 
-        return prisma.conversations.delete({
+    return await prisma.$transaction(
+        async (tx) => {
 
-            where: {
-                id: conversationId
-            }
+            await tx.messages.deleteMany({
+                where: {
+                    conversation_id: id
+                }
+            });
 
-        });
+            await tx.conversations.delete({
+                where: {
+                    id
+                }
+            });
 
-    }
+            return {
+                message:
+                    "Conversation deleted successfully."
+            };
+
+        }
+    );
+
+}
     async countByWorkspace(workspaceId) {
 
         return prisma.conversations.count({

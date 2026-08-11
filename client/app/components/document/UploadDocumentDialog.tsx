@@ -8,191 +8,373 @@ import {
     DialogContent,
     DialogActions,
     Typography,
-    Stack
+    Stack,
+    LinearProgress,
+    Alert
 } from "@mui/material";
 
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 
 import { Button } from "../ui";
+
 import documentService from "@/app/services/document.service";
 
+
+interface UploadDocumentDialogProps {
+    open: boolean;
+    onClose: () => void;
+    workspaceId: string;
+    onUploaded: () => void;
+}
+
+
 export default function UploadDocumentDialog({
-
     open,
-
     onClose,
-
     workspaceId,
-
     onUploaded
+}: UploadDocumentDialogProps) {
 
-}: any) {
+    const [file, setFile] =
+        useState<File | null>(null);
 
-    const [file, setFile] = useState<File | null>(null);
+    const [loading, setLoading] =
+        useState(false);
 
-    const [loading, setLoading] = useState(false);
+    const [progress, setProgress] =
+        useState(0);
 
-    async function handleUpload() {
+    const [error, setError] =
+        useState("");
 
-        if (!file) return;
+
+    /*
+     * Handle file selection
+     */
+    const handleFileChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
+        setError("");
+
+        const selectedFile =
+            event.target.files?.[0];
+
+        if (!selectedFile) {
+            return;
+        }
+
+
+        /*
+         * Validate PDF
+         */
+        const isPDF =
+            selectedFile.type === "application/pdf" ||
+            selectedFile.name
+                .toLowerCase()
+                .endsWith(".pdf");
+
+
+        if (!isPDF) {
+
+            setError(
+                "Only PDF documents are supported."
+            );
+
+            setFile(null);
+
+            return;
+        }
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (selectedFile.size > maxSize) {
+
+            setError(
+                "The PDF must be smaller than 10 MB."
+            );
+
+            setFile(null);
+
+            return;
+        }
+
+
+        setFile(selectedFile);
+    };
+
+
+    /*
+     * Upload document
+     */
+    const handleUpload = async () => {
+
+        if (!file) {
+            return;
+        }
+
+        if (!workspaceId) {
+            setError("Workspace ID is missing.");
+            return;
+        }
 
         try {
 
             setLoading(true);
+            setProgress(0);
+            setError("");
 
             const formData = new FormData();
 
             formData.append("file", file);
-
             formData.append("workspaceId", workspaceId);
 
-            await documentService.upload(formData);
+
+            // DEBUG
+            console.log(
+                "========== FRONTEND DOCUMENT UPLOAD =========="
+            );
+
+            console.log(
+                "Workspace ID:",
+                workspaceId
+            );
+
+            console.log(
+                "File:",
+                file
+            );
+
+            console.log(
+                "FormData workspaceId:",
+                formData.get("workspaceId")
+            );
+
+            console.log(
+                "FormData file:",
+                formData.get("file")
+            );
+
+            console.log(
+                "Is FormData:",
+                formData instanceof FormData
+            );
+
+
+            await documentService.upload(
+                formData,
+                (uploadProgress) => {
+
+                    setProgress(
+                        uploadProgress
+                    );
+
+                }
+            );
 
             onUploaded();
 
+            setFile(null);
+            setProgress(0);
+
             onClose();
 
-            setFile(null);
+        } catch (error: any) {
 
-        }
+            console.error(
+                "Document upload failed:",
+                error
+            );
 
-        catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                "Failed to upload document. Please try again.";
 
-            console.error(error);
+            setError(message);
 
-        }
-
-        finally {
+        } finally {
 
             setLoading(false);
 
         }
 
-    }
+    };
+
+    /*
+     * Close dialog and reset state
+     */
+    const handleClose = () => {
+
+        if (loading) {
+            return;
+        }
+
+        setFile(null);
+
+        setProgress(0);
+
+        setError("");
+
+        onClose();
+
+    };
+
 
     return (
 
         <Dialog
-
             open={open}
-
-            onClose={onClose}
-
+            onClose={handleClose}
             maxWidth="sm"
-
             fullWidth
-
         >
 
             <DialogTitle>
-
                 Upload Document
-
             </DialogTitle>
+
 
             <DialogContent>
 
-                <Stack spacing={3} sx={{ mt: 1 }}>
+                <Stack
+                    spacing={3}
+                    sx={{
+                        mt: 1
+                    }}
+                >
 
-                    <Typography color="text.secondary">
-
-                        Upload a PDF document to your knowledge base.
-
+                    <Typography
+                        color="text.secondary"
+                    >
+                        Upload a PDF document to
+                        your workspace knowledge base.
                     </Typography>
 
+
+                    {error && (
+
+                        <Alert
+                            severity="error"
+                            onClose={() =>
+                                setError("")
+                            }
+                        >
+                            {error}
+                        </Alert>
+
+                    )}
+
+
                     <Button
-
                         component="label"
-
                         variant="outlined"
-
-                        startIcon={<UploadFileRoundedIcon />}
-
+                        disabled={loading}
+                        startIcon={
+                            <UploadFileRoundedIcon />
+                        }
                     >
 
                         Choose PDF
 
                         <input
-
                             hidden
-
                             type="file"
-
-                            accept=".pdf"
-
-                            onChange={(e) => {
-
-                                if (e.target.files?.length) {
-
-                                    setFile(e.target.files[0]);
-
-                                }
-
-                            }}
-
+                            accept=".pdf,application/pdf"
+                            onChange={
+                                handleFileChange
+                            }
                         />
 
                     </Button>
 
-                    {
 
-                        file && (
+                    {file && (
 
-                            <Typography>
+                        <Stack spacing={1}>
+
+                            <Typography
+                                variant="body2"
+                            >
 
                                 Selected:
 
                                 {" "}
 
                                 <strong>
-
                                     {file.name}
-
                                 </strong>
 
                             </Typography>
 
-                        )
 
-                    }
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                            >
+                                Size:{" "}
+                                {(
+                                    file.size /
+                                    (1024 * 1024)
+                                ).toFixed(2)}
+                                {" "}MB
+                            </Typography>
+
+                        </Stack>
+
+                    )}
+
+
+                    {loading && (
+
+                        <Stack spacing={1}>
+
+                            <LinearProgress
+                                variant="determinate"
+                                value={progress}
+                            />
+
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                            >
+                                Uploading... {progress}%
+                            </Typography>
+
+                        </Stack>
+
+                    )}
 
                 </Stack>
 
             </DialogContent>
 
+
             <DialogActions>
 
                 <Button
-
                     variant="outlined"
-
-                    onClick={onClose}
-
+                    onClick={handleClose}
+                    disabled={loading}
                 >
-
                     Cancel
-
                 </Button>
 
+
                 <Button
-
                     variant="contained"
-
-                    disabled={!file || loading}
-
+                    disabled={
+                        !file ||
+                        loading ||
+                        !workspaceId
+                    }
                     onClick={handleUpload}
-
                 >
 
-                    {
-
-                        loading
-
-                            ? "Uploading..."
-
-                            : "Upload"
-
-                    }
+                    {loading
+                        ? `Uploading ${progress}%`
+                        : "Upload"}
 
                 </Button>
 
