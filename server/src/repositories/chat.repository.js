@@ -64,19 +64,14 @@ class ChatRepository {
 
     }
     async getConversations(workspaceId) {
-
-        return prisma.conversations.findMany({
-
+        return await prisma.conversations.findMany({
             where: {
                 workspace_id: workspaceId
             },
-
             orderBy: {
-                updated_at: "desc"
+                created_at: "desc"
             }
-
         });
-
     }
 
     async getConversationMessages(conversationId) {
@@ -95,32 +90,32 @@ class ChatRepository {
 
     }
 
-   async deleteConversation(id) {
+    async deleteConversation(id) {
 
-    return await prisma.$transaction(
-        async (tx) => {
+        return await prisma.$transaction(
+            async (tx) => {
 
-            await tx.messages.deleteMany({
-                where: {
-                    conversation_id: id
-                }
-            });
+                await tx.messages.deleteMany({
+                    where: {
+                        conversation_id: id
+                    }
+                });
 
-            await tx.conversations.delete({
-                where: {
-                    id
-                }
-            });
+                await tx.conversations.delete({
+                    where: {
+                        id
+                    }
+                });
 
-            return {
-                message:
-                    "Conversation deleted successfully."
-            };
+                return {
+                    message:
+                        "Conversation deleted successfully."
+                };
 
-        }
-    );
+            }
+        );
 
-}
+    }
     async countByWorkspace(workspaceId) {
 
         return prisma.conversations.count({

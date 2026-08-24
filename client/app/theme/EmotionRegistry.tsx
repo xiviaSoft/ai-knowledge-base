@@ -28,9 +28,14 @@ export default function EmotionRegistry({
       .map((tag) => tag.textContent)
       .join("");
 
+    const emotionTags = cache.sheet.tags
+      .map((tag) => (tag as HTMLStyleElement & { key?: string }).key)
+      .filter(Boolean)
+      .join(" ");
+
     return (
       <style
-        data-emotion={`${cache.key} ${cache.sheet.tags.map((tag) => tag.key).join(" ")}`}
+        data-emotion={`${cache.key} ${emotionTags}`.trim()}
         dangerouslySetInnerHTML={{ __html: styles }}
       />
     );

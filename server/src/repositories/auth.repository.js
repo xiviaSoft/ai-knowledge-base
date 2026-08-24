@@ -92,13 +92,6 @@ class AuthRepository {
         });
     }
 
-    async deleteRefreshToken(token) {
-        return prisma.refresh_tokens.deleteMany({
-            where: {
-                token
-            }
-        });
-    }
 
 }
 

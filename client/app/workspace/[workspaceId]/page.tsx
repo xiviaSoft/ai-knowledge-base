@@ -1,110 +1,61 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import DashboardStats from "@/app/components/dashboard/DashboardStats";
+import RecentActivity from "@/app/components/dashboard/RecentActivity";
+import useWorkspaceDashboard from "@/app/hooks/useWorkspaceDashboard";
+import { Alert, Box, Container, Typography } from "@mui/material";
 import { useParams } from "next/navigation";
-import { Box, Stack } from "@mui/material";
-
-import OverviewHeader from "@/app/components/workspace/OverviewHeader";
-import OverviewStats from "@/app/components/workspace/OverviewStats";
-import QuickActions from "@/app/components/workspace/QuickActions";
-import RecentActivity from "@/app/components/workspace/RecentActivity";
-import Loader from "@/app/components/ui/Loader";
-
-import workspaceService from "@/app/services/workspace.service";
-import dashboardService from "@/app/services/dashboard.service";
-
-export default function WorkspaceHome() {
-    const { workspaceId } = useParams();
-    const [loading, setLoading] = useState(true);
-    const [workspace, setWorkspace] = useState<any>(null);
-    const [stats, setStats] = useState({
-        documents: 0,
-        members: 0,
-        chats: 0,
-        apiKeys: 0
-    });
-    const [activities, setActivities] = useState([]);
-    useEffect(() => {
-
-        if (workspaceId) {
-
-            loadWorkspace();
-
-        }
-
-    }, [workspaceId]);
-    async function loadWorkspace() {
-
-        try {
-            setLoading(true);
-            const [workspaceResponse, dashboardResponse] = await Promise.all([
-                workspaceService.getById(workspaceId as string),
-                dashboardService.getDashboard(workspaceId as string)
-            ]);
-            setWorkspace(workspaceResponse.data);
-            setStats({
-                documents: dashboardResponse.data.documents,
-                members: dashboardResponse.data.members,
-                chats: dashboardResponse.data.chats,
-                apiKeys: dashboardResponse.data.apiKeys
-            });
-            setActivities(
-                dashboardResponse.data.activities || []
-            );
-
-        }
-        catch (error) {
-            console.error(error);
-        }
-        finally {
-            setLoading(false);
-        }
-    }
-
-    if (loading) {
-
-        return <Loader />;
-
-    }
-
+export default function DashboardPage() {
+    const params = useParams();
+    const workspaceId = params.workspaceId as string;
+    const {
+        data,
+        activities,
+        loading,
+        activityLoading,
+        error
+    } = useWorkspaceDashboard(workspaceId);
     return (
-
         <Box
             sx={{
-                maxWidth: 1500,
-                mx: "auto",
+                minHeight: "100%",
+                backgroundColor: "#F6F8FC",
                 py: 4
             }}
         >
-
-            <OverviewHeader
-
-                workspace={workspace}
-
-            />
-
-            <OverviewStats
-
-                stats={stats}
-
-            />
-
-            <Stack spacing={4} sx={{ mt: 4 }}>
-
-                <QuickActions
-                    workspaceId={workspaceId}
+            <Container maxWidth="xl">
+                <Box sx={{ mb: 4 }}>
+                    <Typography
+                        variant="h4"
+                        sx={{ fontWeight: 700 }}
+                    >
+                        {data?.workspace?.name || "Workspace"}
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                    >
+                        Overview of your workspace activity.
+                    </Typography>
+                </Box>
+                {error && (
+                    <Alert
+                        severity="error"
+                        sx={{ mb: 3 }}
+                    >
+                        {error}
+                    </Alert>
+                )}
+                <DashboardStats
+                    data={data}
+                    loading={loading}
                 />
-
-                <RecentActivity
-
-                    activities={activities}
-
-                />
-
-            </Stack>
-
+                <Box sx={{ mt: 3 }}>
+                    <RecentActivity
+                        activities={activities}
+                        loading={activityLoading}
+                    />
+                </Box>
+            </Container>
         </Box>
-
     );
-
 }

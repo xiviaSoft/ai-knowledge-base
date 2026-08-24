@@ -23,7 +23,12 @@ router.get(
 router.get(
     "/:id",
     authenticate,
-    authorize("OWNER", "ADMIN", "EDITOR", "VIEWER"),
+    authorize(
+        "OWNER",
+        "ADMIN",
+        "EDITOR",
+        "VIEWER"
+    ),
     workspaceController.getWorkspace
 );
 
@@ -33,6 +38,7 @@ router.patch(
     authorize("OWNER"),
     workspaceController.updateWorkspace
 );
+
 
 router.delete(
     "/:id",
@@ -44,6 +50,16 @@ router.get(
     "/:id/activity",
     authenticate,
     authorize("OWNER", "ADMIN", "EDITOR", "VIEWER"),
+    workspaceController.getRecentActivity
+);
+router.get(
+    "/:workspaceId/dashboard",
+    authenticate,
+    workspaceController.getDashboard
+);
+router.get(
+    "/:workspaceId/activity",
+    authenticate,
     workspaceController.getRecentActivity
 );
 export default router;

@@ -12,22 +12,18 @@ class RagProcessor {
 
         try {
 
-    
             await documentRepository.updateStatus(
                 document.id,
                 "PROCESSING"
             );
 
-
-
             let text = "";
 
             if (document.file_type === "PDF") {
 
-                text =
-                    await pdfService.extractText(
-                        document.storage_path
-                    );
+                text = await pdfService.extractText(
+                    document.storage_path
+                );
 
             } else {
 
@@ -53,8 +49,6 @@ class RagProcessor {
             );
 
 
-           
-
             const chunks =
                 await chunkService.split(text);
 
@@ -74,7 +68,9 @@ class RagProcessor {
             }
 
 
-         
+            // ==========================================
+            // 3. SAVE CHUNKS TO MYSQL
+            // ==========================================
 
             await chunkRepository.createMany(
 
@@ -104,20 +100,74 @@ class RagProcessor {
             );
 
 
+            // ==========================================
+            // 4. GENERATE EMBEDDINGS
+            // ==========================================
 
-            const vectors =
+            const embeddings =
                 await geminiEmbedder.embedMany(
                     chunks
                 );
 
 
             console.log(
-                "Embeddings:",
-                vectors.length
+                "========== EMBEDDING RESULT =========="
+            );
+
+            console.log(
+                "Type:",
+                typeof embeddings
+            );
+
+            console.log(
+                "Is array:",
+                Array.isArray(embeddings)
+            );
+
+            console.log(
+                "Count:",
+                embeddings?.length
+            );
+
+            console.log(
+                "First result:",
+                embeddings?.[0]
+            );
+
+            console.log(
+                "First result type:",
+                typeof embeddings?.[0]
+            );
+
+            console.log(
+                "First result is array:",
+                Array.isArray(embeddings?.[0])
+            );
+
+            console.log(
+                "First embedding dimension:",
+                embeddings?.[0]?.embedding?.length
+            );
+
+            console.log(
+                "======================================"
             );
 
 
-            if (!vectors.length) {
+            // ==========================================
+            // VALIDATE EMBEDDINGS
+            // ==========================================
+
+            if (!Array.isArray(embeddings)) {
+
+                throw new Error(
+                    "Embedding result must be an array."
+                );
+
+            }
+
+
+            if (embeddings.length === 0) {
 
                 throw new Error(
                     "No embeddings were generated."
@@ -126,22 +176,93 @@ class RagProcessor {
             }
 
 
-    
-            await pineconeVectorStore.upsert({
+            if (embeddings.length !== chunks.length) {
 
-                document,
+                throw new Error(
+                    `Embedding/chunk count mismatch: ${embeddings.length} embeddings for ${chunks.length} chunks`
+                );
 
-                vectors
+            }
+
+
+            embeddings.forEach(
+                (item, index) => {
+
+                    if (
+                        !item ||
+                        !Array.isArray(item.embedding)
+                    ) {
+
+                        throw new Error(
+                            `Invalid embedding result at index ${index}. Expected an object containing an embedding array.`
+                        );
+
+                    }
+
+
+                    if (item.embedding.length === 0) {
+
+                        throw new Error(
+                            `Embedding at index ${index} is empty.`
+                        );
+
+                    }
+
+                }
+            );
+
+
+            console.log(
+                "Embedding dimension:",
+                embeddings[0].embedding.length
+            );
+
+            const workspaceId =
+                document.workspace_id;
+
+            const documentId =
+                document.id;
+
+
+            console.log(
+                "========== PINECONE INDEXING =========="
+            );
+
+            console.log({
+
+                workspaceId,
+
+                documentId,
+
+                chunks:
+                    chunks.length,
+
+                embeddings:
+                    embeddings.length,
+
+                dimension:
+                    embeddings[0].embedding.length
 
             });
+
+
+            await pineconeVectorStore.upsert(
+
+                embeddings,
+
+                chunks,
+
+                workspaceId,
+
+                documentId
+
+            );
 
 
             console.log(
                 "Vectors uploaded to Pinecone."
             );
 
-
-        
             await documentRepository.updateStatus(
                 document.id,
                 "READY"
@@ -163,6 +284,7 @@ class RagProcessor {
                 "RAG Processing Failed:",
                 error
             );
+
 
             try {
 

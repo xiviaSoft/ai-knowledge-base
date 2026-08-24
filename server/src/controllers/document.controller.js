@@ -180,40 +180,35 @@ class DocumentController {
     }
 
 
-    async deleteDocument(
-        req,
-        res,
-        next
-    ) {
-
+    async deleteDocument(req, res, next) {
         try {
-
-            const response =
-                await documentService.deleteDocument(
-                    req.params.id
-                );
-
-
+            const response = await documentService.deleteDocument(
+                req.params.id,
+                req.user.id
+            );
             return res.status(200).json({
-
                 success: true,
-
-                data: serializeBigInt(
-                    response
-                )
-
+                data: serializeBigInt(response)
             });
-
-        }
-
-        catch (error) {
-
+        } catch (error) {
             next(error);
-
         }
-
     }
-
+    
+    async retryDocument(req, res, next) {
+        try {
+            const response = await documentService.retryDocument(
+                req.params.id,
+                req.user.id
+            );
+            return res.status(200).json({
+                success: true,
+                data: serializeBigInt(response)
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new DocumentController();

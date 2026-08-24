@@ -74,7 +74,12 @@ class DocumentService {
 
         return data;
     }
-
+    async retry(documentId: string) {
+        const { data } = await api.post(
+            `/documents/${documentId}/retry`
+        );
+        return data;
+    }
 }
 
 export default new DocumentService();

@@ -1,27 +1,26 @@
 "use client";
-
+import { useEffect, useRef } from "react";
 import { Box } from "@mui/material";
 import MessageBubble from "./MessageBubble";
-
 interface ChatMessage {
     id: string;
     role: "USER" | "ASSISTANT";
     content: string;
     sources?: any[];
 }
-
 interface MessageListProps {
     messages: ChatMessage[];
 }
-
-export default function MessageList({
-    messages
-}: MessageListProps) {
-
+export default function MessageList({ messages }: MessageListProps) {
+    const bottomRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({
+            behavior: "smooth"
+        });
+    }, [messages]);
     if (!messages?.length) {
         return null;
     }
-
     return (
         <Box
             sx={{
@@ -32,14 +31,7 @@ export default function MessageList({
                 flexDirection: "column",
                 gap: 2.5,
                 pb: 3,
-
-                /*
-                 * Prevent long AI responses,
-                 * URLs or source text from
-                 * creating horizontal overflow.
-                 */
                 overflowX: "hidden",
-
                 "& *": {
                     maxWidth: "100%"
                 }
@@ -51,21 +43,14 @@ export default function MessageList({
                     sx={{
                         width: "100%",
                         minWidth: 0,
-
-                        /*
-                         * Allow long words,
-                         * URLs and generated text
-                         * to wrap correctly.
-                         */
                         overflowWrap: "anywhere",
                         wordBreak: "break-word"
                     }}
                 >
-                    <MessageBubble
-                        message={message}
-                    />
+                    <MessageBubble message={message} />
                 </Box>
             ))}
+            <Box ref={bottomRef} />
         </Box>
     );
 }

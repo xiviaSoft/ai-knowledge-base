@@ -63,15 +63,9 @@ export default function ConversationSidebar({
     onDeleteConversation
 }: ConversationSidebarProps) {
 
-    const [
-        conversations,
-        setConversations
-    ] = useState<Conversation[]>([]);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
 
-    const [
-        loading,
-        setLoading
-    ] = useState(true);
+    const [loading, setLoading] = useState(true);
 
 
     /*
@@ -88,10 +82,7 @@ export default function ConversationSidebar({
             setLoading(true);
 
             const response =
-                await chatService.getConversations(
-                    workspaceId
-                );
-
+                await chatService.getConversations(workspaceId);
             setConversations(response);
 
         } catch (error) {

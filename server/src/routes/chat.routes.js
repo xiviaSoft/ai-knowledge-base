@@ -10,8 +10,7 @@ router.post("/ask", authenticate, authorize(
     "ADMIN",
     "EDITOR",
     "VIEWER"
-), chatController.ask);
-
+), chatController.streamMessage);
 router.get(
     "/conversations",
     authenticate,
@@ -20,6 +19,12 @@ router.get(
 
 router.get(
     "/conversations/:id",
+    authenticate,
+    chatController.getConversation
+);
+
+router.get(
+    "/conversations/:id/messages",
     authenticate,
     chatController.getConversation
 );

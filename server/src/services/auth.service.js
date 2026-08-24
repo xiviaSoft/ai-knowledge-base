@@ -17,16 +17,14 @@ class AuthService {
         } = data;
 
         // Check existing user
-        const existingUser =
-            await authRepository.findUserByEmail(email);
+        const existingUser = await authRepository.findUserByEmail(email);
 
         if (existingUser) {
             throw new Error("Email already exists.");
         }
 
         // Hash password
-        const hashedPassword =
-            await hashPassword(password);
+        const hashedPassword = await hashPassword(password);
 
         // Generate IDs
         const userId = uuid();
@@ -44,15 +42,12 @@ class AuthService {
         };
 
         // Tokens
-        const accessToken =
-            generateAccessToken(payload);
+        const accessToken = generateAccessToken(payload);
 
-        const refreshToken =
-            generateRefreshToken(payload);
+        const refreshToken = generateRefreshToken(payload);
 
         // Refresh Token Expiry
-        const refreshTokenExpiry =
-            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
         // Save everything
         const result =

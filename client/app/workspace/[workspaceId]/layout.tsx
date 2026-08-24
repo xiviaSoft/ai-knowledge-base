@@ -1,6 +1,5 @@
 import WorkspaceNavbar from "@/app/components/layout/WorkspaceNavbar";
 import WorkspaceSidebar from "@/app/components/layout/WorkspaceSidebar";
-
 import {
     Box,
     Toolbar
@@ -8,12 +7,16 @@ import {
 
 export default async function WorkspaceLayout({
     children,
+    params
 }: {
     children: React.ReactNode;
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }) {
+    const { workspaceId } = await params;
 
     return (
-
         <Box
             sx={{
                 display: "flex",
@@ -22,8 +25,9 @@ export default async function WorkspaceLayout({
                 bgcolor: "#F8FAFC"
             }}
         >
-
-            <WorkspaceNavbar />
+            <WorkspaceNavbar
+                workspaceId={workspaceId}
+            />
 
             <WorkspaceSidebar />
 
@@ -37,7 +41,6 @@ export default async function WorkspaceLayout({
                     overflow: "hidden"
                 }}
             >
-
                 <Toolbar />
 
                 <Box
@@ -47,15 +50,9 @@ export default async function WorkspaceLayout({
                         bgcolor: "#F8FAFC"
                     }}
                 >
-
                     {children}
-
                 </Box>
-
             </Box>
-
         </Box>
-
     );
-
 }

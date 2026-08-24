@@ -17,16 +17,19 @@ router.post(
     authorize("OWNER"),
     workspaceMemberController.inviteMember
 );
+
 router.patch(
     "/:workspaceId/members/:memberId",
     authenticate,
     authorize("OWNER"),
     workspaceMemberController.updateRole
 );
+
 router.delete(
     "/:workspaceId/members/:memberId",
     authenticate,
     authorize("OWNER", "ADMIN"),
     workspaceMemberController.removeMember
 );
+
 export default router;

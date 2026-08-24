@@ -1,261 +1,217 @@
 "use client";
+import chatService from "../services/chat.service";
+import { useCallback, useState } from "react";
 
-import { useState } from "react";
-import chatService from "@/app/services/chat.service";
-
-export interface ChatMessage {
+export type ChatMessage = {
     id: string;
     role: "USER" | "ASSISTANT";
     content: string;
     sources?: any[];
-}
+    isStreaming?: boolean;
+};
 
-export interface Conversation {
+export type Conversation = {
     id: string;
     title: string;
     created_at?: string;
     updated_at?: string;
-}
+};
 
-interface UseChatOptions {
-    onConversationCreated?: (
-        conversationId: string
-    ) => void;
-}
+type UseChatOptions = {
+    onConversationCreated?: (conversationId: string) => void;
+};
 
 export default function useChat(
-    workspaceId: string,
+    workspaceId?: string,
     options?: UseChatOptions
 ) {
-    const [messages, setMessages] =
-        useState<ChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    const [conversationTitle, setConversationTitle] = useState("New Conversation");
 
-    const [loading, setLoading] =
-        useState(false);
+    const sendMessage = useCallback(
+        async (question: string) => {
+            const text = question.trim();
 
-    const [error, setError] =
-        useState("");
-
-    const [conversationId, setConversationId] =
-        useState<string | null>(null);
-
-    const [conversationTitle, setConversationTitle] =
-        useState("New Conversation");
-
-
-    /*
-     * Send message
-     */
-    const sendMessage = async (
-        question: string
-    ) => {
-        if (
-            !question.trim() ||
-            loading
-        ) {
-            return;
-        }
-
-        const trimmedQuestion =
-            question.trim();
-
-        setError("");
-
-        /*
-         * Show user message immediately.
-         */
-        const userMessage: ChatMessage = {
-            id: `user-${Date.now()}`,
-            role: "USER",
-            content: trimmedQuestion
-        };
-
-        setMessages((prev) => [
-            ...prev,
-            userMessage
-        ]);
-
-        /*
-         * If this is a new conversation,
-         * use the question as the temporary title.
-         */
-        if (!conversationId) {
-            setConversationTitle(
-                trimmedQuestion.substring(0, 50)
-            );
-        }
-
-        setLoading(true);
-
-        try {
-            const response =
-                await chatService.ask({
-                    workspaceId,
-                    conversationId,
-                    question: trimmedQuestion
-                });
-
-            /*
-             * Backend creates a conversation
-             * when conversationId is null.
-             */
-            if (
-                response.conversationId &&
-                !conversationId
-            ) {
-                const newConversationId =
-                    response.conversationId;
-
-                setConversationId(
-                    newConversationId
-                );
-
-                options?.onConversationCreated?.(
-                    newConversationId
-                );
+            if (!workspaceId || !text || loading) {
+                return;
             }
 
-            /*
-             * Add assistant response.
-             */
-            const assistantMessage: ChatMessage = {
-                id: `assistant-${Date.now()}`,
-                role: "ASSISTANT",
-                content:
-                    response.answer ||
-                    "I couldn't generate an answer.",
-                sources:
-                    response.sources || []
+            setError(null);
+            setLoading(true);
+
+            const userMessage: ChatMessage = {
+                id: `user-${Date.now()}`,
+                role: "USER",
+                content: text
             };
 
-            setMessages((prev) => [
-                ...prev,
+            const assistantMessageId = `assistant-${Date.now()}`;
+
+            const assistantMessage: ChatMessage = {
+                id: assistantMessageId,
+                role: "ASSISTANT",
+                content: "",
+                sources: [],
+                isStreaming: true
+            };
+
+            setMessages((previous) => [
+                ...previous,
+                userMessage,
                 assistantMessage
             ]);
 
-            return response;
+            if (!conversationId) {
+                setConversationTitle(text.substring(0, 50));
+            }
 
-        } catch (err: any) {
-            console.error(
-                "Chat error:",
-                err
-            );
+            try {
+                await chatService.streamMessage({
+                    workspaceId,
+                    conversationId: conversationId || undefined,
+                    question: text,
+                    onStart: (data) => {
+                        if (!data?.conversationId) {
+                            return;
+                        }
 
-            const message =
-                err?.response?.data?.message ||
-                "Something went wrong while processing your question.";
+                        setConversationId((currentId) => {
+                            if (!currentId) {
+                                options?.onConversationCreated?.(
+                                    data.conversationId
+                                );
+                                return data.conversationId;
+                            }
 
-            setError(message);
+                            return currentId;
+                        });
+                    },
+                    onToken: (token) => {
+                        if (!token) {
+                            return;
+                        }
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: `error-${Date.now()}`,
-                    role: "ASSISTANT",
-                    content: message
-                }
-            ]);
+                        setMessages((previous) =>
+                            previous.map((message) =>
+                                message.id === assistantMessageId
+                                    ? {
+                                        ...message,
+                                        content: message.content + token
+                                    }
+                                    : message
+                            )
+                        );
+                    },
+                    onDone: (data) => {
+                        if (data?.conversationId) {
+                            setConversationId(data.conversationId);
+                        }
 
-        } finally {
-            setLoading(false);
-        }
-    };
+                        setMessages((previous) =>
+                            previous.map((message) =>
+                                message.id === assistantMessageId
+                                    ? {
+                                        ...message,
+                                        sources: data?.sources || [],
+                                        isStreaming: false
+                                    }
+                                    : message
+                            )
+                        );
+                    },
+                    onError: (streamError) => {
+                        throw streamError;
+                    }
+                });
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "Something went wrong while processing your question.";
 
+                console.error("Chat streaming error:", error);
 
-    /*
-     * Load existing conversation.
-     */
-    const loadConversation = async (
-        conversation: Conversation
-    ) => {
-        try {
-            setError("");
+                setError(message);
+
+                setMessages((previous) =>
+                    previous.map((item) =>
+                        item.id === assistantMessageId
+                            ? {
+                                ...item,
+                                content: message,
+                                isStreaming: false
+                            }
+                            : item
+                    )
+                );
+            } finally {
+                setLoading(false);
+            }
+        },
+        [workspaceId, conversationId, loading, options]
+    );
+
+    const newConversation = useCallback(() => {
+        setMessages([]);
+        setConversationId(null);
+        setConversationTitle("New Conversation");
+        setError(null);
+        setLoading(false);
+    }, []);
+
+    const resetChat = useCallback(() => {
+        newConversation();
+    }, [newConversation]);
+
+    const loadConversation = useCallback(
+        async (conversation: Conversation) => {
+            if (!conversation?.id) {
+                return;
+            }
+
+            setError(null);
             setLoading(true);
 
-            const response =
-                await chatService.getMessages(
-                    conversation.id
-                );
+            try {
+                const history = await chatService.getMessages(conversation.id);
+                const mapped: ChatMessage[] = history.map((message) => ({
+                    id: message.id,
+                    role: message.role === "USER" ? "USER" : "ASSISTANT",
+                    content: message.content || "",
+                    sources: Array.isArray(message.sources) ? message.sources : []
+                }));
 
-            const data =
-                Array.isArray(response)
-                    ? response
-                    : response?.messages || [];
+                setConversationId(conversation.id);
+                setConversationTitle(conversation.title || "Conversation");
+                setMessages(mapped);
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to load conversation.";
 
-            setConversationId(
-                conversation.id
-            );
-
-            setConversationTitle(
-                conversation.title ||
-                "Conversation"
-            );
-
-            setMessages(
-                data.map(
-                    (message: any) => ({
-                        id: message.id,
-                        role: message.role,
-                        content: message.content,
-                        sources:
-                            message.sources || []
-                    })
-                )
-            );
-
-        } catch (error) {
-            console.error(
-                "Failed to load conversation:",
-                error
-            );
-
-            setError(
-                "Failed to load conversation."
-            );
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    /*
-     * Start new conversation.
-     */
-    const newConversation = () => {
-        setConversationId(null);
-
-        setConversationTitle(
-            "New Conversation"
-        );
-
-        setMessages([]);
-
-        setError("");
-    };
-
-
-    /*
-     * Clear messages.
-     */
-    const clearMessages = () => {
-        setMessages([]);
-
-        setError("");
-    };
-
+                console.error("Load conversation error:", error);
+                setError(message);
+                setMessages([]);
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
 
     return {
         messages,
         loading,
         error,
-
         conversationId,
         conversationTitle,
-
         sendMessage,
         newConversation,
         loadConversation,
-        clearMessages
+        resetChat
     };
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 
 import { useRouter } from "next/navigation";
 

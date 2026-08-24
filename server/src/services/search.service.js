@@ -1,47 +1,45 @@
-import pineconeRetriever from "../ai/retrievers/pinecone.retrievers.js";
+import workspaceMemberRepository from "../repositories/workspaceMember.repository.js";
 import documentRepository from "../repositories/document.repository.js";
+import chatRepository from "../repositories/chat.repository.js";
 
 class SearchService {
 
-    async search(workspaceId, query) {
+    async search(workspaceId, keyword) {
+        const searchTerm = keyword?.trim();
 
-        const matches =
-            await pineconeRetriever.retrieve(
+        if (!searchTerm) {
+            return {
+                documents: [],
+                conversations: [],
+                members: []
+            };
+        }
+
+        const [
+            documents,
+            conversations,
+            members
+        ] = await Promise.all([
+            documentRepository.search(
                 workspaceId,
-                query
-            );
+                searchTerm
+            ),
+            chatRepository.search(
+                workspaceId,
+                searchTerm
+            ),
+            workspaceMemberRepository.search(
+                workspaceId,
+                searchTerm
+            )
+        ]);
 
-        const results = await Promise.all(
-
-            matches.map(async (match) => {
-
-                const document =
-                    await documentRepository.findById(
-                        match.metadata.documentId
-                    );
-
-                return {
-
-                    documentId: match.metadata.documentId,
-
-                    documentName: document.original_name,
-
-                    chunkIndex: match.metadata.chunkIndex,
-
-                    score: match.score,
-
-                    text: match.metadata.text
-
-                };
-
-            })
-
-        );
-
-        return results;
-
+        return {
+            documents,
+            conversations,
+            members
+        };
     }
-
 }
 
 export default new SearchService();
