@@ -13,6 +13,8 @@ import chatRoutes from './routes/chat.routes.js'
 import userRoutes from './routes/user.routes.js'
 import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./docs/swagger.js";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
@@ -34,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(morgan("dev"));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", workspaceMemberRoutes);
 app.use("/api", routes);
