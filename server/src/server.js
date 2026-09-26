@@ -1,4 +1,4 @@
-﻿import app from "./app.js";
+﻿import app from "./index.js";
 import prisma from "./config/prisma.js";
 import { env } from "./config/env.js";
 import { createServer } from "http";
