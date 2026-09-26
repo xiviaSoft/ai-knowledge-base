@@ -16,32 +16,44 @@ const cards = [
     {
         key: "total",
         title: "Total Documents",
-        icon: DescriptionOutlinedIcon
+        icon: DescriptionOutlinedIcon,
+        bgColor: "#E8D5F0",
+        iconColor: "#A855F7"
     },
     {
         key: "ready",
         title: "Ready Documents",
-        icon: CheckCircleOutlineRoundedIcon
+        icon: CheckCircleOutlineRoundedIcon,
+        bgColor: "#D4EDDA",
+        iconColor: "#16A34A"
     },
     {
         key: "processing",
         title: "Processing",
-        icon: AutorenewRoundedIcon
+        icon: AutorenewRoundedIcon,
+        bgColor: "#FFE5CC",
+        iconColor: "#EA580C"
     },
     {
         key: "failed",
         title: "Failed Documents",
-        icon: ErrorOutlineRoundedIcon
+        icon: ErrorOutlineRoundedIcon,
+        bgColor: "#FFD7D7",
+        iconColor: "#DC2626"
     },
     {
         key: "conversations",
         title: "Conversations",
-        icon: ChatBubbleOutlineRoundedIcon
+        icon: ChatBubbleOutlineRoundedIcon,
+        bgColor: "#D1E7F0",
+        iconColor: "#0284C7"
     },
     {
         key: "members",
         title: "Members",
-        icon: PeopleOutlineRoundedIcon
+        icon: PeopleOutlineRoundedIcon,
+        bgColor: "#E8D5F0",
+        iconColor: "#A855F7"
     }
 ];
 interface DashboardStatsProps {
@@ -66,10 +78,11 @@ export default function DashboardStats({
                 display: "grid",
                 gridTemplateColumns: {
                     xs: "1fr",
-                    sm: "repeat(2, 1fr)",
-                    lg: "repeat(3, 1fr)"
+                    sm: "repeat(2, minmax(0, 1fr))",
+                    lg: "repeat(3, minmax(0, 1fr))"
                 },
-                gap: 2
+                gap: 2.5,
+                alignItems: "stretch"
             }}
         >
             {cards.map((card) => {
@@ -79,33 +92,57 @@ export default function DashboardStats({
                         key={card.key}
                         elevation={0}
                         sx={{
-                            border: "1px solid #E5E7EB",
+                            border: "none",
                             borderRadius: 3,
-                            backgroundColor: "#FFFFFF"
+                            backgroundColor: card.bgColor,
+                            minHeight: { xs: 148, md: 162 }
                         }}
                     >
-                        <CardContent>
+                        <CardContent
+                            sx={{
+                                p: 2.5,
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between"
+                            }}
+                        >
                             <Box
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    mb: 2
+                                    gap: 2
                                 }}
                             >
                                 <Typography
                                     variant="body2"
-                                    color="text.secondary"
-                                    sx={{ fontWeight: 600, }}
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: "#111827",
+                                        letterSpacing: "-0.01em"
+                                    }}
                                 >
                                     {card.title}
                                 </Typography>
-                                <Icon
+                                <Box
                                     sx={{
-                                        fontSize: 22,
-                                        color: "text.secondary"
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 2,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        bgcolor: "rgba(255,255,255,0.35)"
                                     }}
-                                />
+                                >
+                                    <Icon
+                                        sx={{
+                                            fontSize: 22,
+                                            color: card.iconColor
+                                        }}
+                                    />
+                                </Box>
                             </Box>
                             {loading ? (
                                 <Skeleton
@@ -116,7 +153,12 @@ export default function DashboardStats({
                             ) : (
                                 <Typography
                                     variant="h4"
-                                    sx={{ fontWeight: 700 }}
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: "#111827",
+                                        lineHeight: 1.1,
+                                        letterSpacing: "-0.04em"
+                                    }}
                                 >
                                     {values[card.key]}
                                 </Typography>

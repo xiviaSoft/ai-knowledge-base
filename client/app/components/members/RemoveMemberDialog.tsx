@@ -1,60 +1,48 @@
 "use client";
-
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
-import PersonRemoveRoundedIcon from "@mui/icons-material/PersonRemoveRounded";
+import {
+    Alert,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Typography
+} from "@mui/material";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { WorkspaceMember } from "@/app/services/workspaceMember.service";
-
 interface RemoveMemberDialogProps {
     open: boolean;
-    member: WorkspaceMember | null;
-    loading: boolean;
+    member?: WorkspaceMember | null;
+    loading?: boolean;
     error?: string;
     onClose: () => void;
     onConfirm: () => void;
 }
-
 export default function RemoveMemberDialog({
     open,
     member,
-    loading,
-    error,
+    loading = false,
+    error = "",
     onClose,
     onConfirm
 }: RemoveMemberDialogProps) {
-
-    if (!member) {
-        return null;
-    }
-
-    const user = member.users;
-
-    const name =
-        `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
-        user.email;
-
+    const fullName = member
+        ? `${member.users.first_name || ""} ${member.users.last_name || ""}`.trim()
+        : "this member";
     return (
         <Dialog
             open={open}
-            onClose={
-                loading
-                    ? undefined
-                    : onClose
-            }
+            onClose={loading ? undefined : onClose}
             maxWidth="xs"
             fullWidth
         >
             <DialogTitle
                 sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
                     fontWeight: 700
                 }}
             >
-                <PersonRemoveRoundedIcon color="error" />
                 Remove Member
             </DialogTitle>
-
             <DialogContent>
                 {error && (
                     <Alert
@@ -64,40 +52,20 @@ export default function RemoveMemberDialog({
                         {error}
                     </Alert>
                 )}
-
-                <Typography
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                >
-                    Are you sure you want to remove this member
-                    from the workspace?
+                <Typography>
+                    Are you sure you want to remove{" "}
+                    <strong>{fullName}</strong> from
+                    this workspace?
                 </Typography>
-
-                <Typography
-                    sx={{
-                        fontWeight: 700
-                    }}
-                >
-                    {name}
-                </Typography>
-
                 <Typography
                     variant="body2"
                     color="text.secondary"
+                    sx={{ mt: 1 }}
                 >
-                    {user.email}
-                </Typography>
-
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 2 }}
-                >
-                    This member will immediately lose access
-                    to this workspace.
+                    This member will lose access to the
+                    workspace and its resources.
                 </Typography>
             </DialogContent>
-
             <DialogActions
                 sx={{
                     px: 3,
@@ -110,14 +78,18 @@ export default function RemoveMemberDialog({
                 >
                     Cancel
                 </Button>
-
                 <Button
                     variant="contained"
                     color="error"
+                    startIcon={
+                        <DeleteOutlineRoundedIcon />
+                    }
                     onClick={onConfirm}
-                    loading={loading}
+                    disabled={loading}
                 >
-                    Remove Member
+                    {loading
+                        ? "Removing..."
+                        : "Remove Member"}
                 </Button>
             </DialogActions>
         </Dialog>

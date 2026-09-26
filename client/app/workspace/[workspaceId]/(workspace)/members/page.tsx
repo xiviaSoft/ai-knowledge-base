@@ -1,86 +1,45 @@
 "use client";
 
+import { WorkspaceMember, WorkspaceMemberRole } from "@/app/services/workspaceMember.service";
+import { canInviteMembers, canManageMemberRoles, canRemoveMembers } from "@/app/utils/workspacePermissions";
+import { Alert, Box, Button, Container, Snackbar, Typography } from "@mui/material";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Container,
-    Snackbar,
-    Typography
-} from "@mui/material";
-import { useParams } from "next/navigation";
-import { useState } from "react";
 import InviteMemberDialog from "@/app/components/members/InviteMemberDialog";
 import RemoveMemberDialog from "@/app/components/members/RemoveMemberDialog";
 import ChangeRoleDialog from "@/app/components/members/ChangeRoleDialog";
-import MemberTable from "@/app/components/members/MemberTable";
 import useWorkspaceMembers from "@/app/hooks/useWorkspaceMembers";
-import {
-    InviteMemberPayload,
-    WorkspaceMember,
-    WorkspaceMemberRole
-} from "@/app/services/workspaceMember.service";
-import {
-    canInviteMembers,
-    canManageMemberRoles,
-    canRemoveMembers
-} from "@/app/utils/workspacePermissions";
+import MemberTable from "@/app/components/members/MemberTable";
+import { useParams } from "next/navigation";
+import { useState } from "react";
 
 export default function MembersPage() {
     const params = useParams();
-
-    const workspaceId =
-        params.workspaceId as string;
-
-    const [inviteOpen, setInviteOpen] =
-        useState(false);
-
-    const [selectedMember, setSelectedMember] =
-        useState<WorkspaceMember | null>(null);
-
-    const [roleMember, setRoleMember] =
-        useState<WorkspaceMember | null>(null);
-
-    const [snackbar, setSnackbar] =
-        useState<{
-            open: boolean;
-            message: string;
-            severity: "success" | "error";
-        }>({
-            open: false,
-            message: "",
-            severity: "success"
-        });
-
+    const workspaceId = params.workspaceId as string;
+    const [inviteOpen, setInviteOpen] = useState(false);
+    const [roleMember, setRoleMember] = useState<WorkspaceMember | null>(null);
+    const [selectedMember, setSelectedMember] = useState<WorkspaceMember | null>(null);
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: "success" | "error";
+    }>({
+        open: false,
+        message: "",
+        severity: "success"
+    });
     const {
         members,
         loading,
         actionLoading,
         error,
         currentUserRole,
-        inviteMember,
         updateRole,
-        removeMember
-    } = useWorkspaceMembers(
-        workspaceId
-    );
-
-    const canInvite =
-        canInviteMembers(
-            currentUserRole
-        );
-
-    const canManageRoles =
-        canManageMemberRoles(
-            currentUserRole
-        );
-
-    const canRemove =
-        canRemoveMembers(
-            currentUserRole
-        );
-
+        removeMember,
+        fetchMembers
+    } = useWorkspaceMembers(workspaceId);
+    const canInvite = canInviteMembers(currentUserRole);
+    const canManageRoles = canManageMemberRoles(currentUserRole);
+    const canRemove = canRemoveMembers(currentUserRole);
     const showSnackbar = (
         message: string,
         severity: "success" | "error"
@@ -91,74 +50,33 @@ export default function MembersPage() {
             severity
         });
     };
-
     const handleRemove = (
         member: WorkspaceMember
     ) => {
         setSelectedMember(member);
     };
-
     const handleRoleChange = (
         memberId: string,
-        role: Exclude<
-            WorkspaceMemberRole,
-            "OWNER"
-        >
+        role: Exclude<WorkspaceMemberRole, "OWNER">
     ) => {
         const member = members.find(
             (member) =>
                 member.id === memberId
         );
-
         if (!member) {
             return;
         }
-
         setRoleMember(member);
     };
-
-    const handleInviteMember = async (
-        payload: InviteMemberPayload
-    ): Promise<void> => {
-        try {
-            await inviteMember(payload);
-
-            showSnackbar(
-                "Member invitation sent successfully.",
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "Failed to invite member:",
-                error
-            );
-
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : "Failed to invite member.";
-
-            showSnackbar(
-                message,
-                "error"
-            );
-
-            throw error;
-        }
-    };
-
     const handleConfirmRemove = async () => {
         if (!selectedMember) {
             return;
         }
-
         try {
             await removeMember(
                 selectedMember.id
             );
-
             setSelectedMember(null);
-
             showSnackbar(
                 "Member removed successfully.",
                 "success"
@@ -168,37 +86,28 @@ export default function MembersPage() {
                 "Failed to remove member:",
                 error
             );
-
             const message =
                 error instanceof Error
                     ? error.message
                     : "Failed to remove member.";
-
             showSnackbar(
                 message,
                 "error"
             );
         }
     };
-
     const handleConfirmRoleChange = async (
-        role: Exclude<
-            WorkspaceMemberRole,
-            "OWNER"
-        >
+        role: Exclude<WorkspaceMemberRole, "OWNER">
     ) => {
         if (!roleMember) {
             return;
         }
-
         try {
             await updateRole(
                 roleMember.id,
                 role
             );
-
             setRoleMember(null);
-
             showSnackbar(
                 "Member role updated successfully.",
                 "success"
@@ -208,19 +117,24 @@ export default function MembersPage() {
                 "Failed to update member role:",
                 error
             );
-
             const message =
                 error instanceof Error
                     ? error.message
                     : "Failed to update member role.";
-
             showSnackbar(
                 message,
                 "error"
             );
         }
     };
-
+    const handleInviteSuccess = async () => {
+        setInviteOpen(false);
+        showSnackbar(
+            "Invitation sent successfully.",
+            "success"
+        );
+        await fetchMembers();
+    };
     return (
         <Box
             sx={{
@@ -250,7 +164,8 @@ export default function MembersPage() {
                         <Typography
                             variant="h4"
                             sx={{
-                                fontWeight: 700
+                                fontWeight: 700,
+                                letterSpacing: "-0.02em"
                             }}
                         >
                             Members
@@ -264,34 +179,47 @@ export default function MembersPage() {
                             Manage members and their workspace roles.
                         </Typography>
                     </Box>
-
                     {canInvite && (
                         <Button
                             variant="contained"
+                            size="large"
                             startIcon={
                                 <PersonAddAltRoundedIcon />
                             }
                             onClick={() =>
                                 setInviteOpen(true)
                             }
+                            sx={{
+                                borderRadius: 2.5,
+                                px: 2.5,
+                                py: 1.25,
+                                fontWeight: 700,
+                                textTransform: "none",
+                                boxShadow: "0 8px 20px rgba(25, 118, 210, 0.2)",
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                    transform: "translateY(-1px)",
+                                    boxShadow: "0 10px 24px rgba(25, 118, 210, 0.28)"
+                                }
+                            }}
                         >
                             Invite Member
                         </Button>
                     )}
                 </Box>
-
                 {error && (
                     <Alert
                         severity="error"
                         sx={{
-                            mb: 3
+                            mb: 3,
+                            borderRadius: 2
                         }}
                     >
                         {error}
                     </Alert>
                 )}
-
                 <MemberTable
+                    workspaceId={workspaceId}
                     members={members}
                     loading={loading}
                     actionLoading={actionLoading}
@@ -300,83 +228,44 @@ export default function MembersPage() {
                     onRoleChange={handleRoleChange}
                     onRemove={handleRemove}
                 />
-
                 <RemoveMemberDialog
-                    open={
-                        Boolean(
-                            selectedMember
-                        )
-                    }
-                    member={
-                        selectedMember
-                    }
-                    loading={
-                        actionLoading
-                    }
-                    error={
-                        error
-                    }
+                    open={Boolean(selectedMember)}
+                    member={selectedMember}
+                    loading={actionLoading}
+                    error={error}
                     onClose={() =>
-                        setSelectedMember(
-                            null
-                        )
+                        setSelectedMember(null)
                     }
                     onConfirm={
                         handleConfirmRemove
                     }
                 />
-
                 <ChangeRoleDialog
-                    open={
-                        Boolean(
-                            roleMember
-                        )
-                    }
-                    member={
-                        roleMember
-                    }
-                    loading={
-                        actionLoading
-                    }
-                    error={
-                        error
-                    }
+                    open={Boolean(roleMember)}
+                    member={roleMember}
+                    loading={actionLoading}
+                    error={error}
                     onClose={() =>
-                        setRoleMember(
-                            null
-                        )
+                        setRoleMember(null)
                     }
                     onConfirm={
                         handleConfirmRoleChange
                     }
                 />
-
                 {canInvite && (
                     <InviteMemberDialog
-                        open={
-                            inviteOpen
-                        }
-                        loading={
-                            actionLoading
-                        }
-                        error={
-                            error
-                        }
+                        open={inviteOpen}
+                        workspaceId={workspaceId}
                         onClose={() =>
-                            setInviteOpen(
-                                false
-                            )
+                            setInviteOpen(false)
                         }
-                        onSubmit={
-                            handleInviteMember
+                        onSuccess={
+                            handleInviteSuccess
                         }
                     />
                 )}
-
                 <Snackbar
-                    open={
-                        snackbar.open
-                    }
+                    open={snackbar.open}
                     autoHideDuration={4000}
                     onClose={() =>
                         setSnackbar(
@@ -392,9 +281,7 @@ export default function MembersPage() {
                     }}
                 >
                     <Alert
-                        severity={
-                            snackbar.severity
-                        }
+                        severity={snackbar.severity}
                         variant="filled"
                         onClose={() =>
                             setSnackbar(

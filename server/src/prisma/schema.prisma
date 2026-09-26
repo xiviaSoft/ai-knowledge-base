@@ -41,22 +41,24 @@ model refresh_tokens {
 }
 
 model users {
-  id                        String                      @id @db.Char(36)
-  first_name                String                      @db.VarChar(100)
-  last_name                 String?                     @db.VarChar(100)
-  email                     String                      @unique(map: "email") @db.VarChar(255)
-  password                  String                      @db.VarChar(255)
-  avatar                    String?                     @db.VarChar(500)
-  is_verified               Boolean?                    @default(false)
-  created_at                DateTime?                   @default(now()) @db.Timestamp(0)
-  updated_at                DateTime?                   @default(now()) @db.Timestamp(0)
-  conversations             conversations[]
-  documents                 documents[]
-  email_verification_tokens email_verification_tokens[]
-  password_reset_tokens     password_reset_tokens[]
-  refresh_tokens            refresh_tokens[]
-  workspace_members         workspace_members[]
-  workspaces                workspaces[]
+  id                                                            String                      @id @db.Char(36)
+  first_name                                                    String                      @db.VarChar(100)
+  last_name                                                     String?                     @db.VarChar(100)
+  email                                                         String                      @unique(map: "email") @db.VarChar(255)
+  password                                                      String                      @db.VarChar(255)
+  avatar                                                        String?                     @db.VarChar(500)
+  is_verified                                                   Boolean?                    @default(false)
+  created_at                                                    DateTime?                   @default(now()) @db.Timestamp(0)
+  updated_at                                                    DateTime?                   @default(now()) @db.Timestamp(0)
+  conversations                                                 conversations[]
+  documents                                                     documents[]
+  email_verification_tokens                                     email_verification_tokens[]
+  password_reset_tokens                                         password_reset_tokens[]
+  refresh_tokens                                                refresh_tokens[]
+  workspace_invitations_workspace_invitations_invitee_idTousers workspace_invitations[]     @relation("workspace_invitations_invitee_idTousers")
+  workspace_invitations_workspace_invitations_inviter_idTousers workspace_invitations[]     @relation("workspace_invitations_inviter_idTousers")
+  workspace_members                                             workspace_members[]
+  workspaces                                                    workspaces[]
 
   @@index([email], map: "idx_users_email")
 }
@@ -76,18 +78,19 @@ model workspace_members {
 }
 
 model workspaces {
-  id                String              @id @db.Char(36)
-  name              String              @db.VarChar(150)
-  slug              String              @unique(map: "slug") @db.VarChar(150)
-  owner_id          String              @db.Char(36)
-  plan              workspaces_plan?    @default(FREE)
-  created_at        DateTime?           @default(now()) @db.Timestamp(0)
-  updated_at        DateTime?           @default(now()) @db.Timestamp(0)
-  api_keys          api_keys[]
-  conversations     conversations[]
-  documents         documents[]
-  workspace_members workspace_members[]
-  users             users               @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_workspace_owner")
+  id                    String                  @id @db.Char(36)
+  name                  String                  @db.VarChar(150)
+  slug                  String                  @unique(map: "slug") @db.VarChar(150)
+  owner_id              String                  @db.Char(36)
+  plan                  workspaces_plan?        @default(FREE)
+  created_at            DateTime?               @default(now()) @db.Timestamp(0)
+  updated_at            DateTime?               @default(now()) @db.Timestamp(0)
+  api_keys              api_keys[]
+  conversations         conversations[]
+  documents             documents[]
+  workspace_invitations workspace_invitations[]
+  workspace_members     workspace_members[]
+  users                 users                   @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_workspace_owner")
 
   @@index([owner_id], map: "fk_workspace_owner")
   @@index([slug], map: "idx_workspace_slug")
@@ -157,6 +160,52 @@ model api_keys {
   workspaces   workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
   @@index([workspace_id])
+}
+
+model notifications {
+  id           String    @id @db.Char(36)
+  user_id      String    @db.Char(36)
+  workspace_id String    @db.Char(36)
+  invitation_id String?  @db.Char(36)
+  type         String    @db.VarChar(50)
+  title        String    @db.VarChar(255)
+  message      String    @db.Text
+  is_read      Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], map: "idx_notification_user")
+  @@index([workspace_id], map: "idx_notification_workspace")
+  @@index([invitation_id], map: "idx_notification_invitation")
+  @@index([user_id, is_read], map: "idx_notification_user_read")
+  @@index([created_at], map: "idx_notification_created")
+}
+model workspace_invitations {
+  id                                            String                       @id @db.Char(36)
+  workspace_id                                  String                       @db.Char(36)
+  inviter_id                                    String                       @db.Char(36)
+  invitee_id                                    String?                      @db.Char(36)
+  email                                         String                       @db.VarChar(255)
+  role                                          workspace_members_role       @default(VIEWER)
+  token                                         String                       @unique @db.VarChar(255)
+  status                                        workspace_invitations_status @default(PENDING)
+  expires_at                                    DateTime                     @db.DateTime(0)
+  created_at                                    DateTime?                    @default(now()) @db.Timestamp(0)
+  accepted_at                                   DateTime?                    @db.DateTime(0)
+  users_workspace_invitations_invitee_idTousers users?                       @relation("workspace_invitations_invitee_idTousers", fields: [invitee_id], references: [id], onDelete: Cascade)
+  users_workspace_invitations_inviter_idTousers users                        @relation("workspace_invitations_inviter_idTousers", fields: [inviter_id], references: [id], onDelete: Cascade)
+  workspaces                                    workspaces                   @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([inviter_id])
+  @@index([invitee_id])
+  @@index([email])
+}
+
+enum workspace_invitations_status {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }
 
 enum workspace_members_role {

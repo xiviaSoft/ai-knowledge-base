@@ -28,6 +28,16 @@ router.post(
     documentController.retryDocument
 );
 router.get(
+    "/:id",
+    authenticate,
+    documentController.getDocument
+);
+router.post(
+    "/:id/sync",
+    authenticate,
+    documentController.syncDocument
+);
+router.get(
     "/",
     authenticate,
     authorizeWorkspace,

@@ -5,11 +5,13 @@ import {
     CardContent,
     Chip,
     Skeleton,
-    Typography
+    Typography,
+    Link
 } from "@mui/material";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 interface Activity {
     type: string;
     title: string;
@@ -28,16 +30,44 @@ export default function RecentActivity({
             elevation={0}
             sx={{
                 border: "1px solid #E5E7EB",
-                borderRadius: 3
+                borderRadius: 3,
+                backgroundColor: "#ffffff"
             }}
         >
-            <CardContent sx={{ p: 3 }}>
-                <Typography
-                    variant="h6"
-                    sx={{ mb: 3, fontWeight:700}}
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 2.5
+                    }}
                 >
-                    Recent Activity
-                </Typography>
+                    <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}
+                    >
+                        Recent Activity
+                    </Typography>
+                    <Link
+                        href="#"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            color: "#6366F1",
+                            textDecoration: "none",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            "&:hover": {
+                                color: "#4F46E5"
+                            }
+                        }}
+                    >
+                        View all
+                        <ChevronRightIcon sx={{ fontSize: 18, ml: 0.25 }} />
+                    </Link>
+                </Box>
                 {loading ? (
                     <Box>
                         <Skeleton height={55} />
@@ -97,7 +127,7 @@ export default function RecentActivity({
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
-                                                fontWeight:600
+                                                fontWeight: 600
                                             }}
                                         >
                                             {activity.title}

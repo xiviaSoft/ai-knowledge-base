@@ -6,32 +6,6 @@ class DocumentController {
     async upload(req, res, next) {
 
         try {
-
-            console.log(
-                "========== DOCUMENT UPLOAD =========="
-            );
-
-            console.log(
-                "User:",
-                req.user?.id
-            );
-
-            console.log(
-                "Body:",
-                req.body
-            );
-
-            console.log(
-                "Workspace:",
-                req.body?.workspaceId
-            );
-
-            console.log(
-                "File:",
-                req.file
-            );
-
-
             /*
              * Multer parses multipart/form-data.
              *
@@ -57,8 +31,7 @@ class DocumentController {
             }
 
 
-            const workspaceId =
-                req.body?.workspaceId;
+            const workspaceId = req.body?.workspaceId;
 
 
             if (!workspaceId) {
@@ -78,8 +51,7 @@ class DocumentController {
              * Upload document
              */
 
-            const result =
-                await documentService.uploadDocument(
+            const result = await documentService.uploadDocument(
 
                     req.user.id,
 
@@ -194,13 +166,43 @@ class DocumentController {
             next(error);
         }
     }
-    
+
     async retryDocument(req, res, next) {
         try {
             const response = await documentService.retryDocument(
                 req.params.id,
                 req.user.id
             );
+            return res.status(200).json({
+                success: true,
+                data: serializeBigInt(response)
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    async getDocument(req, res, next) {
+        try {
+            const document = await documentService.getDocument(
+                req.params.id,
+                req.user.id
+            );
+            return res.status(200).json({
+                success: true,
+                data: document
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    async syncDocument(req, res, next) {
+        try {
+            const response =
+                await documentService.syncDocument(
+                    req.params.id,
+                    req.user.id
+                );
+
             return res.status(200).json({
                 success: true,
                 data: serializeBigInt(response)

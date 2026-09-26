@@ -131,5 +131,20 @@ class DocumentRepository {
             }
         });
     }
+
+    async userHasWorkspaceAccess(
+    workspaceId,
+    userId
+) {
+    const member =
+        await prisma.workspace_members.findFirst({
+            where: {
+                workspace_id: workspaceId,
+                user_id: userId
+            }
+        });
+
+    return !!member;
+}
 }
 export default new DocumentRepository();

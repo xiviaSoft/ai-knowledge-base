@@ -12,16 +12,19 @@ import {
     TableCell,
     TableHead,
     TableRow,
+    Tooltip,
     Typography
 } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {
     WorkspaceMember,
     WorkspaceMemberRole
 } from "@/app/services/workspaceMember.service";
-
+import { useRouter } from "next/navigation";
 interface MemberTableProps {
     members: WorkspaceMember[];
+    workspaceId: string;
     currentUserId?: string;
     canManageRoles?: boolean;
     canRemoveMembers?: boolean;
@@ -33,7 +36,6 @@ interface MemberTableProps {
     ) => void;
     onRemove: (member: WorkspaceMember) => void;
 }
-
 const roleOptions: Exclude<
     WorkspaceMemberRole,
     "OWNER"
@@ -42,7 +44,6 @@ const roleOptions: Exclude<
     "EDITOR",
     "VIEWER"
 ];
-
 const roleColors: Record<
     WorkspaceMemberRole,
     "default" | "primary" | "success" | "warning"
@@ -52,9 +53,9 @@ const roleColors: Record<
     EDITOR: "success",
     VIEWER: "default"
 };
-
 export default function MemberTable({
     members,
+    workspaceId,
     currentUserId,
     canManageRoles = false,
     canRemoveMembers = false,
@@ -63,6 +64,7 @@ export default function MemberTable({
     onRoleChange,
     onRemove
 }: MemberTableProps) {
+    const router = useRouter();
     if (loading) {
         return (
             <Paper
@@ -82,7 +84,6 @@ export default function MemberTable({
             </Paper>
         );
     }
-
     if (!members.length) {
         return (
             <Paper
@@ -95,7 +96,7 @@ export default function MemberTable({
             >
                 <Typography
                     align="center"
-                    sx={{fontWeight:600}}
+                    sx={{ fontWeight: 600 }}
                 >
                     No members found.
                 </Typography>
@@ -109,7 +110,11 @@ export default function MemberTable({
             </Paper>
         );
     }
-
+    const handleView = (memberId: string) => {
+        router.push(
+            `/workspace/${workspaceId}/members/${memberId}`
+        );
+    };
     return (
         <Paper
             elevation={0}
@@ -178,9 +183,8 @@ export default function MemberTable({
                         const isOwner =
                             member.role === "OWNER";
                         const fullName =
-                            `${ user.first_name || "" } ${ user.last_name || "" } `.trim() ||
+                            `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
                             "Unknown User";
-
                         return (
                             <TableRow
                                 key={member.id}
@@ -248,8 +252,7 @@ export default function MemberTable({
                                             onChange={(event) =>
                                                 onRoleChange(
                                                     member.id,
-                                                    event.target
-                                                        .value as Exclude<
+                                                    event.target.value as Exclude<
                                                         WorkspaceMemberRole,
                                                         "OWNER"
                                                     >
@@ -298,29 +301,58 @@ export default function MemberTable({
                                     </Typography>
                                 </TableCell>
                                 <TableCell align="right">
-                                    {canRemoveMembers &&
-                                    !isOwner &&
-                                    !isCurrentUser ? (
-                                        <IconButton
-                                            color="error"
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            onClick={() =>
-                                                onRemove(
-                                                    member
-                                                )
-                                            }
-                                            sx={{
-                                                "&:hover": {
-                                                    backgroundColor:
-                                                        "rgba(239, 68, 68, 0.08)"
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "flex-end",
+                                            alignItems: "center",
+                                            gap: 0.5
+                                        }}
+                                    >
+                                        <Tooltip title="View member">
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() =>
+                                                    handleView(
+                                                        member.id
+                                                    )
                                                 }
-                                            }}
-                                        >
-                                            <DeleteOutlineRoundedIcon />
-                                        </IconButton>
-                                    ) : null}
+                                                sx={{
+                                                    "&:hover": {
+                                                        backgroundColor:
+                                                            "rgba(25, 118, 210, 0.08)"
+                                                    }
+                                                }}
+                                            >
+                                                <VisibilityOutlinedIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        {canRemoveMembers &&
+                                        !isOwner &&
+                                        !isCurrentUser ? (
+                                            <Tooltip title="Remove member">
+                                                <IconButton
+                                                    color="error"
+                                                    disabled={
+                                                        actionLoading
+                                                    }
+                                                    onClick={() =>
+                                                        onRemove(
+                                                            member
+                                                        )
+                                                    }
+                                                    sx={{
+                                                        "&:hover": {
+                                                            backgroundColor:
+                                                                "rgba(239, 68, 68, 0.08)"
+                                                        }
+                                                    }}
+                                                >
+                                                    <DeleteOutlineRoundedIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        ) : null}
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         );

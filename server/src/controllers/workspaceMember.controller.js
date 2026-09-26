@@ -74,6 +74,23 @@ class WorkspaceMemberController {
             next(error);
         }
     }
+    async getMember(req, res, next) {
+        try {
+            const member =
+                await workspaceMemberService.getMember(
+                    req.params.workspaceId,
+                    req.params.memberId,
+                    req.user.id
+                );
+
+            return res.status(200).json({
+                success: true,
+                data: member
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new WorkspaceMemberController();

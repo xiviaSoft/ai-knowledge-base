@@ -16,14 +16,10 @@ class ChatController {
             );
             res.flushHeaders();
             await chatService.streamQuestion({
-                workspaceId:
-                    req.body.workspaceId,
-                conversationId:
-                    req.body.conversationId,
-                question:
-                    req.body.question,
-                userId:
-                    req.user.id
+                workspaceId: req.body.workspaceId,
+                conversationId: req.body.conversationId,
+                question: req.body.question,
+                userId: req.user.id
             }, res);
         } catch (error) {
             console.error(

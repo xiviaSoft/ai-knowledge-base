@@ -1,10 +1,35 @@
 "use client";
-import { Paper, Table, TableHead, TableBody, TableRow, TableCell, Chip, IconButton, Typography, CircularProgress } from "@mui/material";
+import {
+    Paper,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Chip,
+    IconButton,
+    Typography,
+    CircularProgress,
+    Stack,
+    Tooltip
+} from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import { useParams, useRouter } from "next/navigation";
+
 export default function DocumentTable({
     documents,
-    onDelete
-}: any) {
+    onDelete,
+    onRetry
+}: {
+    documents: any[];
+    onDelete: (document: any) => void;
+    onRetry: (documentId: string) => void;
+}) {
+    const router = useRouter();
+    const { workspaceId } = useParams();
+
     const getStatus = (status: string) => {
         switch (status) {
             case "UPLOADING":
@@ -39,6 +64,13 @@ export default function DocumentTable({
                 };
         }
     };
+
+    const handleView = (documentId: string) => {
+        router.push(
+            `/workspace/${workspaceId}/documents/${documentId}`
+        );
+    };
+
     return (
         <Paper
             elevation={0}
@@ -56,17 +88,40 @@ export default function DocumentTable({
                             backgroundColor: "#F8FAFC"
                         }}
                     >
-                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>Type</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>Size</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>Status</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>Uploaded</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 700, color: "text.secondary" }}>Actions</TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Name
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Type
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Size
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Status
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Uploaded
+                        </TableCell>
+                        <TableCell
+                            align="right"
+                            sx={{
+                                fontWeight: 700,
+                                color: "text.secondary"
+                            }}
+                        >
+                            Actions
+                        </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {documents.map((doc: any) => {
                         const status = getStatus(doc.status);
+                        const isProcessing =
+                            doc.status === "UPLOADING" ||
+                            doc.status === "PROCESSING";
+                        const isFailed = doc.status === "FAILED";
+
                         return (
                             <TableRow
                                 key={doc.id}
@@ -92,12 +147,20 @@ export default function DocumentTable({
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {doc.mime_type || doc.file_type || "Unknown"}
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        {doc.mime_type ||
+                                            doc.file_type ||
+                                            "Unknown"}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
                                         {doc.file_size
                                             ? `${(
                                                 Number(doc.file_size) /
@@ -126,28 +189,72 @@ export default function DocumentTable({
                                     />
                                 </TableCell>
                                 <TableCell>
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
                                         {doc.created_at
-                                            ? new Date(doc.created_at).toLocaleDateString()
+                                            ? new Date(
+                                                doc.created_at
+                                            ).toLocaleDateString()
                                             : "—"}
                                     </Typography>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton
-                                        color="error"
-                                        disabled={
-                                            doc.status === "UPLOADING" ||
-                                            doc.status === "PROCESSING"
-                                        }
-                                        onClick={() => onDelete(doc)}
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
                                         sx={{
-                                            "&:hover": {
-                                                backgroundColor: "rgba(239, 68, 68, 0.08)"
-                                            }
+                                            justifyContent: "flex-end"
                                         }}
                                     >
-                                        <DeleteOutlineRoundedIcon />
-                                    </IconButton>
+                                        <Tooltip title="See document">
+                                            <span>
+                                                <IconButton
+                                                    color="primary"
+                                                    disabled={isProcessing}
+                                                    onClick={() =>
+                                                        handleView(doc.id)
+                                                    }
+                                                >
+                                                    <VisibilityOutlinedIcon />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                        {isFailed && (
+                                            <Tooltip title="Retry processing">
+                                                <span>
+                                                    <IconButton
+                                                        color="warning"
+                                                        onClick={() =>
+                                                            onRetry(doc.id)
+                                                        }
+                                                    >
+                                                        <ReplayRoundedIcon />
+                                                    </IconButton>
+                                                </span>
+                                            </Tooltip>
+                                        )}
+                                        <Tooltip title="Delete document">
+                                            <span>
+                                                <IconButton
+                                                    color="error"
+                                                    disabled={isProcessing}
+                                                    onClick={() =>
+                                                        onDelete(doc)
+                                                    }
+                                                    sx={{
+                                                        "&:hover": {
+                                                            backgroundColor:
+                                                                "rgba(239, 68, 68, 0.08)"
+                                                        }
+                                                    }}
+                                                >
+                                                    <DeleteOutlineRoundedIcon />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                    </Stack>
                                 </TableCell>
                             </TableRow>
                         );

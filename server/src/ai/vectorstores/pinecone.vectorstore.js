@@ -82,6 +82,7 @@ class PineconeVectorStore {
             dimension: vectorDimension
         };
     }
+    
     async deleteDocumentVectors(workspaceId, documentId, chunkCount) {
         if (!workspaceId) {
             throw new Error("Workspace ID is required.");
@@ -99,5 +100,71 @@ class PineconeVectorStore {
         await index.namespace(String(workspaceId)).deleteMany(ids);
         console.log("Vectors deleted successfully.");
     }
+
+    async getDocumentVectors(
+    workspaceId,
+    documentId,
+    chunkCount
+) {
+    if (!workspaceId) {
+        throw new Error(
+            "Workspace ID is required."
+        );
+    }
+
+    if (!documentId) {
+        throw new Error(
+            "Document ID is required."
+        );
+    }
+
+    const count = Number(chunkCount);
+
+    if (
+        !Number.isInteger(count) ||
+        count <= 0
+    ) {
+        return [];
+    }
+
+    const ids = Array.from(
+        { length: count },
+        (_, indexNumber) =>
+            `${documentId}-${indexNumber}`
+    );
+
+    console.log(
+        `Fetching ${ids.length} Pinecone vectors`
+    );
+
+    console.log(
+        "Workspace namespace:",
+        String(workspaceId)
+    );
+
+    console.log(
+        "Document ID:",
+        String(documentId)
+    );
+
+    const namespaceIndex =
+        index.namespace(
+            String(workspaceId)
+        );
+
+    const response =
+        await namespaceIndex.fetch(ids);
+
+    const records =
+        response?.records || {};
+
+    return Object.entries(records).map(
+        ([id, record]) => ({
+            id,
+            metadata:
+                record?.metadata || {}
+        })
+    );
+}
 }
 export default new PineconeVectorStore();

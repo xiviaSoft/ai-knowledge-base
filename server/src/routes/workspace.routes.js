@@ -4,6 +4,7 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 import { createWorkspaceSchema, updateWorkspaceSchema } from "../validators/workspace.validator.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import authorize from "../middlewares/authorize.middleware.js";
+import userController from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -61,5 +62,10 @@ router.get(
     "/:workspaceId/activity",
     authenticate,
     workspaceController.getRecentActivity
+);
+router.get(
+    "/:workspaceId/users/search",
+    authenticate,
+    userController.searchUsers
 );
 export default router;

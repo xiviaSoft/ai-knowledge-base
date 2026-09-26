@@ -58,12 +58,22 @@ class WorkspaceMemberService {
             );
         }
 
-        return workspaceMemberRepository.create({
+        const member = await workspaceMemberRepository.create({
             id: uuid(),
             workspace_id: workspaceId,
             user_id: user.id,
             role
         });
+
+        await notificationService.create({
+            userId: user.id,
+            workspaceId,
+            type: "MEMBER_ADDED",
+            title: "Added to workspace",
+            message: `You were added to a workspace as ${role}.`
+        });
+
+        return member;
     }
 
     async updateRole(
@@ -199,6 +209,41 @@ class WorkspaceMemberService {
         }
 
         return workspace;
+    }
+
+    async getMember(
+        workspaceId,
+        memberId,
+        userId
+    ) {
+        await this.verifyWorkspaceAccess(
+            workspaceId,
+            userId
+        );
+
+        const member =
+            await workspaceMemberRepository.findMemberById(
+                memberId
+            );
+
+        if (!member) {
+            throw new ApiError(
+                404,
+                "Member not found."
+            );
+        }
+
+        if (
+            member.workspace_id !==
+            workspaceId
+        ) {
+            throw new ApiError(
+                404,
+                "Member does not belong to this workspace."
+            );
+        }
+
+        return member;
     }
 }
 

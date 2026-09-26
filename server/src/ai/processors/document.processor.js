@@ -2,7 +2,6 @@ import extractStage from "../pipeline/extract.stage.js";
 import chunkStage from "../pipeline/chunk.stage.js";
 import embeddingStage from "../pipeline/embedding.stage.js";
 import vectorStage from "../pipeline/vector.stage.js";
-import statusStage from "../pipeline/status.stage.js";
 
 class DocumentProcessor {
 

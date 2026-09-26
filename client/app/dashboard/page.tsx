@@ -1,26 +1,35 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { Box, Typography } from "@mui/material";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-
-import { useRouter } from "next/navigation";
-
-import ProtectedRoute from "../components/common/ProtectedRoute";
-import WorkspaceCard from "../components/workspace/WorkspaceCard";
 import CreateWorkspaceDialog from "../components/workspace/CreateWorkspaceDialog";
-
+import WorkspaceCard from "../components/workspace/WorkspaceCard";
+import ProtectedRoute from "../components/common/ProtectedRoute";
 import { Button, EmptyState, Loader } from "../components/ui";
-
 import workspaceService from "../services/workspace.service";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
     const router = useRouter();
     const [workspaces, setWorkspaces] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    
     useEffect(() => {
         loadWorkspaces();
+        const handleWorkspaceUpdated = () => {
+            loadWorkspaces();
+        };
+        window.addEventListener(
+            "workspace:updated",
+            handleWorkspaceUpdated
+        );
+        return () => {
+            window.removeEventListener(
+                "workspace:updated",
+                handleWorkspaceUpdated
+            );
+        };
     }, []);
 
     async function loadWorkspaces() {

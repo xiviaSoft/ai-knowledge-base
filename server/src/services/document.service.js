@@ -80,14 +80,41 @@ class DocumentService {
         return serializeBigInt(documents);
     }
 
-    async getDocument(id) {
-        const document = await documentRepository.findById(id);
-        if (!document) {
-            throw new Error("Document not found.");
-        }
-        return serializeBigInt(document);
+   async getDocument(id) {
+    const document =
+        await documentRepository.findById(id);
+
+    if (!document) {
+        throw new Error(
+            "Document not found."
+        );
     }
 
+    const chunks =
+        await chunkRepository.findByDocumentId(
+            document.id
+        );
+
+    const pineconeVectors =
+        await pineconeVectorStore.getDocumentVectors(
+            document.workspace_id,
+            document.id,
+            chunks.length
+        );
+
+    return serializeBigInt({
+        document,
+        chunks,
+        pinecone: {
+            namespace: String(
+                document.workspace_id
+            ),
+            vectorCount:
+                pineconeVectors.length,
+            vectors: pineconeVectors
+        }
+    });
+}
     async deleteDocument(id, userId) {
         const document = await documentRepository.findById(id);
         if (!document) {
@@ -123,47 +150,49 @@ class DocumentService {
             message: "Document deleted successfully."
         };
     }
-    
+
     async retryDocument(id, userId) {
-    const document = await documentRepository.findById(id);
-    if (!document) {
-        throw new Error("Document not found.");
-    }
-    if (userId && document.uploaded_by !== userId) {
-        throw new Error("You do not have permission to retry this document.");
-    }
-    if (document.status !== "FAILED") {
-        throw new Error("Only failed documents can be retried.");
-    }
-    try {
-        await documentRepository.updateStatus(
-            document.id,
-            "PROCESSING"
-        );
-        await ragProcessor.process(document);
-        const readyDocument = await documentRepository.updateStatus(
-            document.id,
-            "READY"
-        );
-        return {
-            message: "Document processed successfully.",
-            document: serializeBigInt(readyDocument)
-        };
-    } catch (error) {
-        console.error("Document retry processing failed:", error);
+        const document = await documentRepository.findById(id);
+        if (!document) {
+            throw new Error("Document not found.");
+        }
+        if (userId && document.uploaded_by !== userId) {
+            throw new Error("You do not have permission to retry this document.");
+        }
+        if (document.status !== "FAILED") {
+            throw new Error("Only failed documents can be retried.");
+        }
         try {
             await documentRepository.updateStatus(
                 document.id,
-                "FAILED"
+                "PROCESSING"
             );
-        } catch (statusError) {
-            console.error(
-                "Failed to update document status:",
-                statusError
+            await ragProcessor.process(document);
+            const readyDocument = await documentRepository.updateStatus(
+                document.id,
+                "READY"
             );
+            return {
+                message: "Document processed successfully.",
+                document: serializeBigInt(readyDocument)
+            };
+        } catch (error) {
+            console.error("Document retry processing failed:", error);
+            try {
+                await documentRepository.updateStatus(
+                    document.id,
+                    "FAILED"
+                );
+            } catch (statusError) {
+                console.error(
+                    "Failed to update document status:",
+                    statusError
+                );
+            }
+            throw error;
         }
-        throw error;
     }
-}
+
+   
 }
 export default new DocumentService();

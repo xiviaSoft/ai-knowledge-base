@@ -1,17 +1,19 @@
 "use client";
+import UploadDocumentDialog from "@/app/components/document/UploadDocumentDialog";
+import DocumentsHeader from "@/app/components/document/DocumentsHeader";
+import EmptyDocuments from "@/app/components/document/EmptyDocuments";
+import DocumentTable from "@/app/components/document/DocumentTable";
+import documentService from "@/app/services/document.service";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Box } from "@mui/material";
-import DocumentsHeader from "@/app/components/document/DocumentsHeader";
-import UploadDocumentDialog from "@/app/components/document/UploadDocumentDialog";
-import EmptyDocuments from "@/app/components/document/EmptyDocuments";
-import documentService from "@/app/services/document.service";
-import DocumentTable from "@/app/components/document/DocumentTable";
+
 export default function DocumentsPage() {
     const { workspaceId } = useParams();
-    const [uploadOpen, setUploadOpen] = useState(false);
     const [documents, setDocuments] = useState<any[]>([]);
+    const [uploadOpen, setUploadOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+
     const loadDocuments = useCallback(async () => {
         if (!workspaceId) return;
         try {
@@ -26,6 +28,7 @@ export default function DocumentsPage() {
             setLoading(false);
         }
     }, [workspaceId]);
+
     useEffect(() => {
         loadDocuments();
     }, [loadDocuments]);
@@ -53,8 +56,19 @@ export default function DocumentsPage() {
             console.error("Failed to delete document:", error);
         }
     }
+    async function handleRetry(documentId: string) {
+        try {
+            await documentService.retry(documentId);
+            await loadDocuments();
+        } catch (error) {
+            console.error(
+                "Failed to retry document:",
+                error
+            );
+        }
+    }
     return (
-        <Box sx={{p:2}}>
+        <Box sx={{ p: 2 }}>
             <DocumentsHeader
                 onUpload={() => setUploadOpen(true)}
             />
@@ -64,6 +78,7 @@ export default function DocumentsPage() {
                 <DocumentTable
                     documents={documents}
                     onDelete={handleDelete}
+                    onRetry={handleRetry}
                 />
             )}
             <UploadDocumentDialog

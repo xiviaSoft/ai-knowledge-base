@@ -1,5 +1,5 @@
-import index from "../../config/pinecone.js";
 import geminiEmbedder from "../embedders/gemini.embedder.js";
+import index from "../../config/pinecone.js";
 class PineconeRetriever {
     async retrieve(workspaceId, question, topK = 5) {
         if (!workspaceId) {

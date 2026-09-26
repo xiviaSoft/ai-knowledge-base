@@ -19,20 +19,20 @@ export default function DashboardPage() {
             sx={{
                 minHeight: "100%",
                 backgroundColor: "#F6F8FC",
-                py: 4
+                py: { xs: 3, md: 4 }
             }}
         >
-            <Container maxWidth="xl">
-                <Box sx={{ mb: 4 }}>
+            <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
+                <Box sx={{ mb: 3 }}>
                     <Typography
                         variant="h4"
-                        sx={{ fontWeight: 700 }}
+                        sx={{ fontWeight: 700, letterSpacing: "-0.03em" }}
                     >
                         {data?.workspace?.name || "Workspace"}
                     </Typography>
                     <Typography
                         color="text.secondary"
-                        sx={{ mt: 0.5 }}
+                        sx={{ mt: 0.5, fontSize: { xs: 15, md: 16 } }}
                     >
                         Overview of your workspace activity.
                     </Typography>

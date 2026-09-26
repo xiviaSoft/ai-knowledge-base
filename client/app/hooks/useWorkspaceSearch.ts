@@ -1,9 +1,6 @@
 "use client";
-
+import searchService, { SearchResults } from "@/app/services/search.service";
 import { useEffect, useState } from "react";
-import searchService, {
-    SearchResults
-} from "@/app/services/search.service";
 
 export default function useWorkspaceSearch(
     workspaceId: string,

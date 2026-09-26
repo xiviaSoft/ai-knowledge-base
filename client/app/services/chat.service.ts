@@ -388,7 +388,7 @@ class ChatService {
         }
 
         const response = await fetch(
-            `${this.getApiUrl()}/api/chat/conversation/${conversationId}`,
+            `${this.getApiUrl()}/chat/conversations/${conversationId}`,
             {
                 method: "DELETE",
                 headers: {

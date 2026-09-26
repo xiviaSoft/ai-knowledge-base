@@ -24,18 +24,17 @@ const authorize = (...allowedRoles) => {
 
             }
 
-            const member =
-                await prisma.workspace_members.findFirst({
+            const member = await prisma.workspace_members.findFirst({
 
-                    where: {
+                where: {
 
-                        workspace_id: workspaceId,
+                    workspace_id: workspaceId,
 
-                        user_id: req.user.id
+                    user_id: req.user.id
 
-                    }
+                }
 
-                });
+            });
 
             if (!member) {
 

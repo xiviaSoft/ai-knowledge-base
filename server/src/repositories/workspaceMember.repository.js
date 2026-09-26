@@ -41,12 +41,23 @@ class WorkspaceMemberRepository {
     }
 
     async findMemberById(memberId) {
-        return prisma.workspace_members.findUnique({
-            where: {
-                id: memberId
+    return prisma.workspace_members.findUnique({
+        where: {
+            id: memberId
+        },
+        include: {
+            users: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    avatar: true
+                }
             }
-        });
-    }
+        }
+    });
+}
 
     async create(data) {
         return prisma.workspace_members.create({

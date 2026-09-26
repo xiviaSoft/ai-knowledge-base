@@ -10,7 +10,11 @@ router.get(
     authenticate,
     workspaceMemberController.getMembers
 );
-
+router.get(
+    "/:workspaceId/members/:memberId",
+    authenticate,
+    workspaceMemberController.getMember
+);
 router.post(
     "/:id/members",
     authenticate,

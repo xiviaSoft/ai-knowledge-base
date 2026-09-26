@@ -7,8 +7,7 @@ export default function Layout({ children }: any) {
     return (
         <Box
             sx={{
-                height: "calc(100vh - 64px)",
-                overflow: 'hidden'
+                height: "100vh",
             }}>
             {children}
         </Box>

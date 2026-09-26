@@ -1,11 +1,10 @@
 "use client";
-
 import workspaceMemberService, {
-    InviteMemberPayload,
     WorkspaceMember,
     WorkspaceMemberRole
 } from "@/app/services/workspaceMember.service";
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "./useAuth";
 
 const getErrorMessage = (
     error: unknown,
@@ -25,7 +24,6 @@ const getErrorMessage = (
                 };
             }
         ).response;
-
         if (
             typeof response?.data?.message === "string" &&
             response.data.message
@@ -33,46 +31,32 @@ const getErrorMessage = (
             return response.data.message;
         }
     }
-
     if (error instanceof Error && error.message) {
         return error.message;
     }
-
     return fallback;
 };
 
 export default function useWorkspaceMembers(
     workspaceId: string
 ) {
-    const [currentUserRole, setCurrentUserRole] =
-        useState<WorkspaceMemberRole | null>(null);
-    const [members, setMembers] =
-        useState<WorkspaceMember[]>([]);
-    const [actionLoading, setActionLoading] =
-        useState(false);
-    const [loading, setLoading] =
-        useState(true);
-    const [error, setError] =
-        useState("");
+    const { user } = useAuth();
+    const [currentUserRole, setCurrentUserRole] = useState<WorkspaceMemberRole | null>(null);
+    const [members, setMembers] = useState<WorkspaceMember[]>([]);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const getCurrentUserId = () => {
+    const getCurrentUserId = (): string | null => {
         try {
-            const storedUser =
-                localStorage.getItem("user");
-
+            const storedUser = localStorage.getItem("user");
             if (!storedUser) {
                 return null;
             }
-
-            const user = JSON.parse(storedUser);
-
-            return user?.id || null;
+            const storedUserData = JSON.parse(storedUser);
+            return storedUserData?.id || null;
         } catch (error) {
-            console.error(
-                "Failed to read current user:",
-                error
-            );
-
+            console.error("Failed to read current user:", error);
             return null;
         }
     };
@@ -90,27 +74,22 @@ export default function useWorkspaceMembers(
                 setLoading(true);
                 setError("");
 
-                const data =
-                    await workspaceMemberService.getMembers(
-                        workspaceId
-                    );
+                const data = await workspaceMemberService.getMembers(
+                    workspaceId
+                );
 
                 setMembers(data);
 
-                const currentUserId =
-                    getCurrentUserId();
+                const currentUserId = user?.id;
 
                 if (!currentUserId) {
                     setCurrentUserRole(null);
                     return;
                 }
 
-                const currentMember =
-                    data.find(
-                        (member) =>
-                            member.users?.id ===
-                            currentUserId
-                    );
+                const currentMember = data.find(
+                    (member) => member.user_id === currentUserId
+                );
 
                 setCurrentUserRole(
                     currentMember?.role || null
@@ -133,45 +112,28 @@ export default function useWorkspaceMembers(
                 setLoading(false);
             }
         },
-        [workspaceId]
+        [workspaceId, user?.id]
     );
 
     useEffect(() => {
         fetchMembers();
+
+        const handleWorkspaceMembershipUpdated = () => {
+            fetchMembers();
+        };
+
+        window.addEventListener(
+            "workspace:membership-updated",
+            handleWorkspaceMembershipUpdated
+        );
+
+        return () => {
+            window.removeEventListener(
+                "workspace:membership-updated",
+                handleWorkspaceMembershipUpdated
+            );
+        };
     }, [fetchMembers]);
-
-    const inviteMember = async (
-        payload: InviteMemberPayload
-    ): Promise<void> => {
-        try {
-            setActionLoading(true);
-            setError("");
-
-            await workspaceMemberService.inviteMember(
-                workspaceId,
-                payload
-            );
-
-            await fetchMembers();
-        } catch (error: unknown) {
-            console.error(
-                "Failed to invite member:",
-                error
-            );
-
-            const message =
-                getErrorMessage(
-                    error,
-                    "Failed to invite member."
-                );
-
-            setError(message);
-
-            throw new Error(message);
-        } finally {
-            setActionLoading(false);
-        }
-    };
 
     const updateRole = async (
         memberId: string,
@@ -197,13 +159,20 @@ export default function useWorkspaceMembers(
                         (member) =>
                             member.id === memberId
                                 ? {
-                                      ...member,
-                                      ...updatedMember,
-                                      role
-                                  }
+                                    ...member,
+                                    ...updatedMember,
+                                    role
+                                }
                                 : member
                     )
             );
+
+            if (
+                updatedMember.user_id ===
+                getCurrentUserId()
+            ) {
+                setCurrentUserRole(role);
+            }
 
             return updatedMember;
         } catch (error: unknown) {
@@ -272,7 +241,6 @@ export default function useWorkspaceMembers(
         actionLoading,
         error,
         fetchMembers,
-        inviteMember,
         updateRole,
         removeMember
     };

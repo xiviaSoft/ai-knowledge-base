@@ -1,9 +1,9 @@
-import chunkRepository from "../repositories/chunk.repository.js";
-import chunkService from "./chunk.service.js";
-import pdfService from "./pdf.service.js";
-import geminiEmbedder from "./embedders/gemini.embedder.js";
 import pineconeVectorStore from "./vectorstores/pinecone.vectorstore.js";
 import documentRepository from "../repositories/document.repository.js";
+import chunkRepository from "../repositories/chunk.repository.js";
+import recursiveChunker from "./chunkers/recursive.chunker.js";
+import geminiEmbedder from "./embedders/gemini.embedder.js";
+import pdfExtractor from "./extractors/pdf.extractor.js";
 import { v4 as uuid } from "uuid";
 
 class RagProcessor {
@@ -12,16 +12,12 @@ class RagProcessor {
 
         try {
 
-            await documentRepository.updateStatus(
-                document.id,
-                "PROCESSING"
-            );
-
+            await documentRepository.updateStatus(document.id, "PROCESSING");
             let text = "";
 
             if (document.file_type === "PDF") {
 
-                text = await pdfService.extractText(
+                text = await pdfExtractor.extract(
                     document.storage_path
                 );
 
@@ -35,28 +31,16 @@ class RagProcessor {
 
 
             if (!text?.trim()) {
-
-                throw new Error(
-                    "No text could be extracted from the document."
-                );
+                throw new Error("No text could be extracted from the document.");
 
             }
 
+            console.log("Extracted text length:", text.length);
 
-            console.log(
-                "Extracted text length:",
-                text.length
-            );
+            const chunks = await recursiveChunker.chunk(text);
 
 
-            const chunks =
-                await chunkService.split(text);
-
-
-            console.log(
-                "Chunks:",
-                chunks.length
-            );
+            console.log("Chunks:",chunks.length);
 
 
             if (!chunks.length) {
@@ -68,9 +52,7 @@ class RagProcessor {
             }
 
 
-            // ==========================================
             // 3. SAVE CHUNKS TO MYSQL
-            // ==========================================
 
             await chunkRepository.createMany(
 
@@ -100,9 +82,7 @@ class RagProcessor {
             );
 
 
-            // ==========================================
             // 4. GENERATE EMBEDDINGS
-            // ==========================================
 
             const embeddings =
                 await geminiEmbedder.embedMany(
